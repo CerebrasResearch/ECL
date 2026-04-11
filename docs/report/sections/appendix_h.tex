@@ -1,0 +1,77 @@
+% =============================================================================
+\section{Annotated Reference Guide}\label{app:references}
+% =============================================================================
+
+This appendix provides annotated summaries of key references organized by topic, intended as a guide for readers entering the field.
+
+\subsection{Genomic sequence models}
+
+\paragraph{\citet{Avsec2021Enformer} --- Enformer.}
+Introduced transformer attention for gene expression prediction from 196~kb DNA input. Key contribution: demonstrated that attention-based long-range interactions improve over pure CNNs (Basenji2). The paper's ``contribution scores'' analysis showed that attention enables the model to integrate enhancer signals at $>$20~kb, but most predictive signal remains promoter-proximal. Directly motivates ECL measurement.
+
+\paragraph{\citet{Linder2025Borzoi} --- Borzoi.}
+Extended Enformer to 524~kb with RNA-seq coverage prediction at 32~bp resolution. Predicts 7,611 tracks across human and mouse. Key insight: longer context improves splicing and isoform-level predictions. The 32~bp output resolution makes block perturbation at $b=32$ natural.
+
+\paragraph{\citet{Nguyen2023HyenaDNA} --- HyenaDNA.}
+First genomic model at 1~Mb single-nucleotide resolution using the Hyena implicit convolution operator. Demonstrated that perplexity improves with context length up to 1~Mb. Small parameter count ($<$7M) raises questions about how much long-range information is captured in practice.
+
+\paragraph{\citet{Schiff2024Caduceus} --- Caduceus.}
+Bidirectional Mamba (BiMamba) with reverse-complement equivariance. Achieves competitive performance with 10$\times$ fewer parameters than transformer baselines on variant effect prediction. The bidirectional architecture is significant for ECL: both upstream and downstream context can influence each position, unlike autoregressive models.
+
+\paragraph{\citet{Brixi2025Evo2} --- Evo~2.}
+40B-parameter StripedHyena-Transformer hybrid processing 1~Mb inputs, trained on 9.3~trillion base pairs across all domains of life. Currently the largest genomic language model. The hybrid architecture (predominantly SSM with sparse attention) creates a distinctive ECL profile that may differ from pure transformers or pure SSMs.
+
+\paragraph{\citet{Benegas2026AlphaGenome} --- AlphaGenome.}
+Google DeepMind's 1~Mb supervised model predicting thousands of genomic tracks. Notably acknowledges that predictions degrade for genes $>$100~kb from the input center, providing an informal ECL estimate of $\sim$100~kb.
+
+\subsection{Context utilization in NLP}
+
+\paragraph{\citet{Liu2024LostInMiddle} --- Lost in the Middle.}
+Demonstrated the U-shaped retrieval accuracy curve in LLMs: information at the beginning and end of context is well-used; middle positions are underweighted. The genomic analogue would be positional bias in Enformer/Borzoi attention.
+
+\paragraph{\citet{Hsieh2024RULER} --- RULER.}
+Benchmark defining effective context as the maximum length maintaining $>$85.6\% performance across 13 tasks. Found most open-source models use $<$50\% of claimed context. RULER's operational definition is task-specific; our perturbation-variance ECL complements it with a task-agnostic, embedding-level measure.
+
+\paragraph{\citet{An2024EffCtx} --- Why ECL Falls Short.}
+Identified left-skewed position frequency distributions during pretraining as the root cause of short ECL. Their STRING method shifts well-trained positions to overwrite undertrained ones, improving long-context performance without retraining.
+
+\subsection{Sensitivity analysis and attribution}
+
+\paragraph{\citet{Saltelli2010VarianceSA} --- Variance-based sensitivity analysis.}
+The foundational reference for Sobol indices and total-effect indices. Provides the mathematical framework for decomposing output variance into input contributions. Our connection between perturbation influence and Sobol indices (\cref{thm:sobol_equiv}) builds directly on this work.
+
+\paragraph{\citet{Fel2021Sobol} --- Sobol attribution for neural networks.}
+Applied Sobol-based sensitivity analysis to explain neural network predictions using perturbation masks from quasi-Monte Carlo sequences. Demonstrated efficiency over standard perturbation methods. Directly relevant to our surrogate-accelerated ECL (\cref{alg:surrogate}).
+
+\paragraph{\citet{Toneyan2024CREME} --- CREME.}
+Toolkit for measuring context dependence in genomic models via dinucleotide shuffling of distal regions. Found that Enformer's expression predictions are largely insensitive to distal sequence, while some silencer effects extend over the full receptive field. CREME's methodology is a special case of our out-of-window ablation $\Delta_{\mathrm{out}}$.
+
+\paragraph{\citet{Karollus2023Limited} --- Enformer's limited distal sensitivity.}
+Showed via progressive masking that Enformer captures regulatory determinants mainly in promoters, and that predicted variant effects decay rapidly with distance---unlike experimentally measured effect sizes. This is precisely the nominal--effective gap that ECL formalizes.
+
+\subsection{Information theory and decision theory}
+
+\paragraph{\citet{Blackwell1951Comparison} --- Comparison of experiments.}
+Foundational paper establishing that one information source (experiment) is more informative than another if and only if it achieves lower Bayes risk for all decision problems. We apply this to compare context-limited embeddings across models (\cref{sec:blackwell}).
+
+\paragraph{\citet{Barbero2024OverSquashing} --- Over-squashing in transformers.}
+Established theoretical bounds on information propagation in decoder-only transformers, showing that sensitivity to distant tokens depends on the sum of weighted paths through the attention graph. Implies that even with unlimited nominal context, architectural bottlenecks limit effective context.
+
+\subsection{SSMs and architectural alternatives}
+
+\paragraph{\citet{Gu2023Mamba} --- Mamba.}
+Introduced selective state-space models with input-dependent gating, achieving linear-time sequence modeling. The selective mechanism allows the model to dynamically choose what to remember, creating position-dependent context utilization patterns.
+
+\paragraph{\citet{Dao2024Mamba2} --- Mamba-2 and SSD.}
+Established the Structured State Space Duality, proving mathematical equivalence between SSMs and linear attention. This theoretical unification explains why hybrid SSM-attention architectures (StripedHyena, Evo) work well: SSMs provide efficient long-range context compression, while sparse attention provides selective precise recall.
+
+\paragraph{\citet{Jelassi2024Copying} --- Copying limitations of SSMs.}
+Proved that any model with fixed-size memory is fundamentally limited at copying long random strings. For genomics, this implies that SSM-based models may fail to propagate precise sequence information (e.g., exact motif sequences) over very long distances, even if they capture statistical patterns.
+
+\subsection{Causal interpretability}
+
+\paragraph{\citet{Kendiukhov2026MechInterp} --- Mechanistic interpretability critique.}
+Showed that attention-based gene regulatory network extraction fails in single-cell models, with trivial baselines outperforming attention-derived networks. Demonstrates that observational measures (attention maps) are unreliable indicators of functional context utilization, motivating interventional approaches like our perturbation-based ECL.
+
+\paragraph{\citet{Goodfire2025Evo2} --- SAEs on Evo~2.}
+Trained sparse autoencoders on Evo~2 representations, recovering biologically interpretable features (coding regions, TFBS, tRNA, exon-intron boundaries). Suggests that genomic models learn rich internal representations, but does not address whether these representations are causally driven by long-range context.

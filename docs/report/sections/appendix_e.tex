@@ -1,0 +1,67 @@
+% =============================================================================
+\section{Sensitivity to Hyperparameters}\label{app:sensitivity}
+% =============================================================================
+
+This appendix describes systematic ablation studies to assess ECL estimator sensitivity.
+
+\subsection{Number of Monte Carlo samples $n$}
+
+The convergence rate of $\widehat{\cI}(i;r)$ is $O(1/\sqrt{n})$ (\cref{thm:clt}). We recommend the following convergence check:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item Compute $\widehat{\ECL}_{0.9}$ at $n \in \{10, 25, 50, 100, 200, 500\}$.
+\item Plot $\widehat{\ECL}_{0.9}$ vs.\ $n$ with bootstrap CIs.
+\item Report the $n$ at which the CI width stabilizes below a target (e.g., $\pm$2~kb).
+\end{enumerate}
+Expected: ECL stabilizes rapidly for models with concentrated influence (small ECD) and more slowly for models with diffuse influence.
+
+\subsection{Block size $b$}
+
+For block perturbation at sizes $b \in \{1, 8, 32, 128, 512\}$ bp:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item Compute ECL at each block size.
+\item Report the block-size dependence curve.
+\item Identify the coarsest block size that preserves ECL estimates within 10\% of single-nucleotide resolution.
+\end{enumerate}
+Expected: for models with smooth influence profiles, $b=32$ or $b=128$ suffices. For models with sharp motif-level features, $b=1$ may be necessary.
+
+\subsection{Number of bootstrap replicates $B$}
+
+Bootstrap CI coverage depends on $B$. We recommend $B \ge 1{,}000$ and verify coverage by checking that the CI width changes by less than 5\% when doubling $B$.
+
+\subsection{Choice of embedding layer}
+
+For multi-layer models, ECL can be computed at different layers $l$:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item Compute ECL at layers $l \in \{1, L/4, L/2, 3L/4, L\}$.
+\item Expected: ECL grows with depth as deeper layers integrate more context.
+\item Report the layer at which ECL saturates---this identifies the depth at which context integration is complete.
+\end{enumerate}
+
+\subsection{Choice of distance metric}
+
+Compare ECL under: (i) squared Euclidean $\norm{\cdot}_2^2$, (ii) cosine distance, (iii) Mahalanobis distance with regularized covariance ($\lambda = 0.01$).
+
+Expected: cosine distance yields shorter ECL than Euclidean (it ignores magnitude changes, which may extend further than directional changes). Mahalanobis distance should be intermediate, providing rotation-invariant measurement.
+
+\subsection{Sensitivity summary protocol}
+
+We recommend reporting a sensitivity summary table for each model:
+
+\begin{table}[H]
+\centering
+\caption{Proposed format: hyperparameter sensitivity summary.}
+\label{tab:sensitivity}
+\small
+\begin{tabular}{@{}l l l@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Range tested} & \textbf{$\widehat{\ECL}_{0.9}$ range (bp)} \\
+\midrule
+$n$ (MC samples) & 10--500 & --- \\
+$b$ (block size) & 1--512 bp & --- \\
+$B$ (bootstrap) & 100--5000 & --- \\
+Layer $l$ & 1--$L$ & --- \\
+Metric $d_\cZ$ & Eucl./Cos./Mahal. & --- \\
+Perturbation type & Sub/Shuf/Markov/Gen & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

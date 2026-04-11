@@ -1,0 +1,63 @@
+% =============================================================================
+\section{Additive-Model Derivations and Variance Identities}\label{app:additive}
+% =============================================================================
+
+\subsection{Proof of \texorpdfstring{\cref{thm:sobol_equiv}}{Theorem: Sobol Equivalence}}
+
+\begin{proof}
+Under the additive model $f(X) = \sum_{i=1}^L g_i(X_i)$ with independent coordinates and independent-copy perturbation at position $i$:
+\[
+f(X) - f(X^{(i)}) = g_i(X_i) - g_i(X_i'),
+\]
+where $X_i' \sim P_i$ is independent of $X_i$. Therefore:
+\[
+\cI(i;r) = \E\!\left[\norm{g_i(X_i) - g_i(X_i')}_2^2\right] = 2\Var(g_i(X_i)),
+\]
+using the identity $\E[(Y-Y')^2] = 2\Var(Y)$ for i.i.d.\ copies $Y, Y'$.
+
+For a scalar projection $\varphi(f(X)) = \sum_i \varphi(g_i(X_i))$, the total variance decomposes as $V_{\mathrm{tot}} = \sum_i \Var(\varphi(g_i(X_i)))$ by independence. The Sobol total-effect index for coordinate $i$ in an additive model with independent inputs equals the first-order index: $S_i^T = S_i = \Var(\varphi(g_i(X_i)))/V_{\mathrm{tot}}$. Therefore $\cI(i;r) = 2V_{\mathrm{tot}} S_i^T$.
+\end{proof}
+
+\subsection{Quantitative tail approximation (\texorpdfstring{\cref{prop:tail_add}}{Proposition: Tail Approximation})}
+
+\begin{proof}
+Let $f(X)=\sum_{i=1}^L g_i(X_i) + \epsilon(X)$ and $S = \{i:|i-r|>\ell\}$. Define:
+\begin{align*}
+A_S &:= \sum_{i\in S}(g_i(X_i)-g_i(X_i')), \\
+B_S &:= \epsilon(X)-\epsilon(X^{(S)}).
+\end{align*}
+Then $\Delta_S := f(X) - f(X^{(S)}) = A_S + B_S$ and:
+\[
+\E\norm{\Delta_S}^2 = \E\norm{A_S}^2 + 2\E\ip{A_S}{B_S} + \E\norm{B_S}^2.
+\]
+Under independence and the additive structure:
+\[
+\E\norm{A_S}^2 = \sum_{i\in S}\E\norm{g_i(X_i)-g_i(X_i')}^2 = \sum_{i\in S} \cI(i;r).
+\]
+By Cauchy--Schwarz: $|2\E\ip{A_S}{B_S}| \le 2\sqrt{\E\norm{A_S}^2}\sqrt{\E\norm{B_S}^2}$.
+
+Since $\E\norm{B_S}^2 \le 4\eta^2$ (where $\eta^2 = \E[\norm{\epsilon(X)}^2]$, using triangle inequality and i.i.d.\ structure):
+\[
+\left|\Delta_{\mathrm{out}}(\ell;r) - \sum_{i\in S}\cI(i;r)\right| \le 2\sqrt{\sum_{i\in S}\cI(i;r)} \cdot 2\eta + 4\eta^2.
+\]
+\end{proof}
+
+\subsection{Variance decomposition identity}
+
+For completeness, we record the law of total variance:
+\[
+\Var(Y) = \E[\Var(Y\mid \cG)] + \Var(\E[Y\mid \cG]),
+\]
+where $\cG$ is a sub-$\sigma$-algebra. This underlies the Sobol decomposition: conditioning on $X_S$ yields $V_S := \Var(\E[Y\mid X_S])$, the variance explained by coordinates in $S$.
+
+\subsection{Explicit computation for quadratic models}
+
+Consider $f(X) = \sum_i g_i(X_i) + \sum_{i<j} g_{ij}(X_i, X_j)$ (pairwise interactions). The influence energy for perturbing position $i$ becomes:
+\[
+\cI(i;r) = 2\Var(g_i(X_i)) + 2\sum_{j \neq i} \E\!\left[\Var(g_{ij}(X_i, X_j) \mid X_j)\right],
+\]
+where the second term captures the interaction contribution. This shows that single-site perturbation captures both main effects and the ``average interaction'' with all other positions, but not the specific pairwise interaction structure.
+
+\subsection{Whitening invariance}
+
+Let $\Sigma=\Cov(f(X))$ be positive definite and define whitened embeddings $\tilde f(X)=\Sigma^{-1/2}(f(X)-\E[f(X)])$. For any invertible linear transform $T$, the model $Tf$ has covariance $T\Sigma T^\top$. Whitening $(T\Sigma T^\top)^{-1/2}(Tf(X) - T\E[f(X)]) = (T\Sigma T^\top)^{-1/2}T\Sigma^{1/2}\tilde{f}(X)$. Since $(T\Sigma T^\top)^{-1/2}T\Sigma^{1/2}$ is orthogonal (verifiable by checking that its square is the identity up to sign), ECL under Mahalanobis distance is invariant under invertible linear reparameterization.

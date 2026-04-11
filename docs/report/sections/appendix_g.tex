@@ -1,0 +1,128 @@
+% =============================================================================
+\section{Implementation Guide}\label{app:implementation}
+% =============================================================================
+
+This appendix provides practical guidance for implementing the ECL estimation framework. We describe software architecture, model-specific considerations, and a step-by-step protocol.
+
+\subsection{Software architecture}
+
+We recommend a modular Python implementation with the following components:
+
+\paragraph{Core modules.}
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item \texttt{perturbations.py}: Perturbation kernel implementations. Each kernel is a callable: \texttt{perturb(sequence, positions, rng)} $\to$ \texttt{perturbed\_sequence}. Implementations for random substitution, dinucleotide shuffle (using the Altschul--Erickson algorithm), $k$-mer Markov resampling, and generative infilling.
+\item \texttt{influence.py}: Influence energy computation. Core function: \texttt{compute\_influence(model, sequences, reference, perturbation, metric, n\_samples)} $\to$ \texttt{influence\_profile}. Supports batched GPU inference.
+\item \texttt{ecl.py}: ECL computation from influence profiles. Functions for cumulative influence, ECL at specified $\beta$, ECP, ECD, AECP, directional ECL.
+\item \texttt{estimation.py}: Statistical estimation utilities. Bootstrap CI, Bernstein bounds, antithetic estimation, importance sampling, permutation tests.
+\item \texttt{cds.py}: Context Decay Spectroscopy. Mixture-of-exponentials fitting via scipy \texttt{curve\_fit} or EM.
+\item \texttt{gniah.py}: Genomic Needle-in-a-Haystack protocol.
+\end{enumerate}
+
+\paragraph{Model wrappers.}
+Each model requires a wrapper class implementing:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item \texttt{forward(sequence)} $\to$ \texttt{embedding}: returns the embedding tensor.
+\item \texttt{nominal\_context}: the model's nominal context length in bp.
+\item \texttt{token\_to\_bp(token\_idx)} $\to$ \texttt{bp\_position}: position mapping $\phi$.
+\item \texttt{embedding\_dim}: dimensionality of the output embedding.
+\end{enumerate}
+
+\subsection{Model-specific implementation notes}
+
+\paragraph{Enformer.}
+Available via \texttt{enformer-pytorch} or TensorFlow Hub. Input: one-hot encoded DNA of length 196,608 bp. Output: 5,313 tracks at 896 output positions (128 bp resolution). For ECL computation, extract the central bin's embedding vector (or the full 896-position output and analyze per-bin). Use the human head (tracks 0--5,312).
+
+Practical consideration: Enformer's convolutional stem processes 196,608 bp into 1,536 positions before attention. Perturbations at single-nucleotide resolution within a 128~bp bin are largely equivalent due to the initial convolution. Block perturbation at $b=128$ bp is recommended for efficiency.
+
+\paragraph{Borzoi.}
+Similar to Enformer but with 524,288 bp input and 32~bp output resolution (16,384 output positions). Uses an ensemble of replicates; average predictions across replicates for stability.
+
+\paragraph{HyenaDNA.}
+Available via HuggingFace. Input: character-level DNA tokens. Supports variable context lengths up to 1~Mb. The model produces per-token embeddings; extract the embedding at the reference position $r$. No tokenization mapping needed ($\phi = \mathrm{id}$).
+
+\paragraph{Caduceus.}
+BiMamba architecture with reverse-complement equivariance. Input: character-level DNA. The bidirectional architecture means perturbations propagate in both directions, potentially creating different ECL profiles than unidirectional models. Extract embeddings at position $r$ from the final layer.
+
+\paragraph{Evo~2.}
+40B parameters; requires multi-GPU inference (at least 4$\times$ A100 80GB). Input: character-level DNA up to 1~Mb. The model is autoregressive (next-token prediction), so the ``embedding'' is the hidden state at position $r$. Note: for autoregressive models, only positions $i < r$ can influence the embedding at $r$ (causal masking), creating an inherent directional asymmetry.
+
+\paragraph{DNABERT-2.}
+BPE tokenization with ALiBi positional encoding. Input: tokenized DNA (variable length, $\sim$512 tokens $\approx$ 3~kb). The position mapping $\phi$ is non-trivial due to BPE: each token spans a variable number of base pairs. ECL should be reported in bp using $\phi$.
+
+\subsection{Step-by-step protocol}
+
+\paragraph{Step 1: Locus selection.}
+\begin{enumerate}[leftmargin=2em, label=(1.\arabic*)]
+\item Download GENCODE annotations (v44) and ENCODE cCRE annotations.
+\item Select 500 promoter-centered loci (TSS $\pm$ half of nominal context), 500 enhancer-centered loci (distal cCREs $>$10~kb from nearest TSS), 500 random intronic controls.
+\item Exclude loci on training chromosomes; use chr8 and chr9 (held-out for Enformer/Borzoi).
+\item Extract reference genome sequences (hg38) centered on each locus.
+\end{enumerate}
+
+\paragraph{Step 2: Perturbation generation.}
+\begin{enumerate}[leftmargin=2em, label=(2.\arabic*)]
+\item For each sequence and each distance bin $d \in \{0, 1, 2, 5, 10, 20, 50, 100, 200, 500\}$ kb:
+\item Sample $m(d) = 10$ positions at distance $d$ from the reference.
+\item Generate perturbed sequences under each perturbation type.
+\item Cache perturbed sequences to avoid regeneration during bootstrap.
+\end{enumerate}
+
+\paragraph{Step 3: Forward pass computation.}
+\begin{enumerate}[leftmargin=2em, label=(3.\arabic*)]
+\item For each sequence: compute the reference embedding $f(X)$.
+\item For each perturbation: compute $f(X^{(i)})$.
+\item Compute $d_\cZ(f(X), f(X^{(i)}))$ for each perturbation.
+\item Store all pairwise distances for bootstrap resampling.
+\end{enumerate}
+
+\paragraph{Step 4: Influence profile and ECL computation.}
+\begin{enumerate}[leftmargin=2em, label=(4.\arabic*)]
+\item Average pairwise distances within each distance bin.
+\item Compute cumulative influence and normalize.
+\item Find ECL$_\beta$ for $\beta \in \{0.5, 0.8, 0.9, 0.95, 0.99\}$.
+\item Compute ECP, ECD, AECP, directional ECL.
+\end{enumerate}
+
+\paragraph{Step 5: Uncertainty quantification.}
+\begin{enumerate}[leftmargin=2em, label=(5.\arabic*)]
+\item Run $B=1{,}000$ bootstrap resamples.
+\item Report percentile CIs for all quantities.
+\item Compute Bernstein-based analytical CIs for comparison.
+\end{enumerate}
+
+\paragraph{Step 6: Visualization and reporting.}
+\begin{enumerate}[leftmargin=2em, label=(6.\arabic*)]
+\item Generate all proposed figures and tables.
+\item Run hyperparameter sensitivity checks (\cref{app:sensitivity}).
+\item Compare across models using the permutation test.
+\end{enumerate}
+
+\subsection{Recommended hardware}
+
+\begin{table}[H]
+\centering
+\caption{Hardware requirements per model for a complete ECL analysis (500 loci, binned estimator).}
+\label{tab:hardware}
+\small
+\begin{tabular}{@{}l l l l@{}}
+\toprule
+\textbf{Model} & \textbf{GPU memory} & \textbf{Estimated time} & \textbf{GPU type} \\
+\midrule
+Enformer & 16 GB & $\sim$14 hours & 1$\times$ A100 \\
+Borzoi & 32 GB & $\sim$28 hours & 1$\times$ A100 80GB \\
+HyenaDNA & 16 GB & $\sim$8 hours & 1$\times$ A100 \\
+Caduceus & 8 GB & $\sim$4 hours & 1$\times$ A100 \\
+Evo~2 & 320 GB & $\sim$12 days & 4$\times$ A100 80GB \\
+DNABERT-2 & 8 GB & $\sim$2 hours & 1$\times$ A100 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Numerical considerations}
+
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item \textbf{Numerical precision:} Use float32 for embeddings; float64 for cumulative sums and ECL computation to avoid rounding errors in threshold comparisons.
+\item \textbf{Embedding normalization:} For models with very high-dimensional embeddings ($d > 3{,}000$), normalize embeddings to unit norm before computing distances to avoid numerical overflow. Report whether normalization was applied.
+\item \textbf{Zero-influence positions:} Positions with $\widehat{\cI}(i;r) < \varepsilon_{\mathrm{machine}}$ should be treated as zero. This affects ECD computation (entropy with near-zero probabilities).
+\item \textbf{Boundary handling:} Positions within $R_{\mathrm{boundary}}$ bp of sequence edges should be excluded or flagged, as boundary effects can inflate apparent ECL.
+\end{enumerate}

@@ -1,0 +1,68 @@
+% =============================================================================
+\section{Related Work}\label{sec:related}
+% =============================================================================
+
+\subsection{Sequence-to-function genomic models}
+
+Deep learning for regulatory genomics began with convolutional neural networks (CNNs) operating on kilobase-scale windows. DeepSEA~\citep{Zhou2015DeepSEA} and Basset~\citep{Kelley2016Basset} predicted chromatin features from $\sim$1~kb inputs. Basenji~\citep{Kelley2018Basenji} extended context to $\sim$131~kb via dilated convolutions and predicted genome-wide signal tracks; Basenji2~\citep{Kelley2020Basenji2} improved multi-assay coverage. Enformer~\citep{Avsec2021Enformer} introduced transformer attention over a $\sim$196~kb window, achieving state-of-the-art gene expression prediction. Borzoi~\citep{Linder2025Borzoi} extended this to $\sim$524~kb with RNA-seq coverage prediction. Most recently, AlphaGenome~\citep{Benegas2026AlphaGenome} processes 1~Mb via a CNN--transformer hybrid predicting thousands of functional genomic tracks.
+
+In parallel, genomic foundation models have pushed nominal context to the megabase scale. HyenaDNA~\citep{Nguyen2023HyenaDNA} used implicit long convolutions (Hyena operator) at single-nucleotide resolution up to $10^6$ tokens. DNABERT~\citep{Ji2021DNABERT} and DNABERT-2~\citep{Zhou2023DNABERT2} applied $k$-mer and BPE tokenization with ALiBi positional encoding. The Nucleotide Transformer~\citep{DallasTorre2024NT} provided up to 2.5B-parameter models with 6--12~kb context. Caduceus~\citep{Schiff2024Caduceus} introduced bidirectional Mamba (BiMamba) with reverse-complement equivariance at 131~kb. GENA-LM~\citep{Fishman2025GENA} extended BigBird sparse attention to 36~kb. GPN-MSA~\citep{Benegas2024GPNMSA} takes only 128~bp but incorporates multi-species alignment for evolutionary context. Evo~\citep{Nguyen2024Evo} (7B parameters, StripedHyena, 131~kb) and Evo~2~\citep{Brixi2025Evo2} (40B parameters, 1~Mb) represent the current frontier, trained on 9.3 trillion base pairs across all domains of life. Emerging hybrid architectures include HybriDNA~\citep{Chen2025HybriDNA} (Transformer-Mamba2, 131~kb) and JanusDNA~\citep{Chen2025JanusDNA} (bidirectional Mamba-Attention-MoE, 1~Mb). \Cref{tab:model_taxonomy} summarizes the landscape.
+
+\begin{table}[t]
+\centering
+\caption{Taxonomy of genomic sequence models. Nominal context in base pairs.}
+\label{tab:model_taxonomy}
+\small
+\begin{tabular}{@{}llcrr@{}}
+\toprule
+\textbf{Model} & \textbf{Architecture} & \textbf{Year} & \textbf{Nominal ctx (bp)} & \textbf{Parameters} \\
+\midrule
+DeepSEA & CNN & 2015 & 1,000 & $\sim$0.3M \\
+Basset & CNN & 2016 & 600 & $\sim$2M \\
+Basenji & Dilated CNN & 2018 & 131,072 & $\sim$4M \\
+Basenji2 & Dilated CNN & 2020 & 131,072 & $\sim$4M \\
+Enformer & CNN + Transformer & 2021 & 196,608 & $\sim$250M \\
+Borzoi & CNN + Transformer & 2025 & 524,288 & $\sim$250M \\
+DNABERT & BERT ($k$-mer) & 2021 & $\sim$512 & 110M \\
+DNABERT-2 & BERT (BPE + ALiBi) & 2024 & $\sim$3,000 & 117M \\
+Nucleotide Transf. & Transformer (6-mer) & 2024 & 12,000 & 50M--2.5B \\
+HyenaDNA & Hyena (implicit conv) & 2023 & 1,000,000 & 1.6M--6.6M \\
+Caduceus & BiMamba (SSM) & 2024 & 131,072 & $\sim$8M \\
+GENA-LM & BigBird (sparse attn.) & 2025 & 36,000 & 110M--336M \\
+GPN-MSA & CNN + MSA & 2025 & 128 & $\sim$80M \\
+Evo & StripedHyena & 2024 & 131,072 & 7B \\
+Evo~2 & StripedHyena + Transf. & 2025 & 1,000,000 & 40B \\
+AlphaGenome & CNN + Transformer & 2026 & 1,000,000 & N/A \\
+HybriDNA & Transf.--Mamba2 hybrid & 2025 & 131,072 & 7B \\
+JanusDNA & Mamba--Attn.--MoE & 2025 & 1,000,000 & N/A \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Long-context modeling and effective utilization in NLP}\label{sec:related_nlp}
+
+The nominal--effective context gap was first systematically documented in NLP. \citet{Liu2024LostInMiddle} showed that language models exhibit a U-shaped retrieval accuracy curve, with up to 30\% performance loss for information at intermediate context positions. Follow-up work~\citep{Hsieh2024RULER} introduced the RULER benchmark, defining effective context length as the maximum length at which a model maintains performance above a fixed threshold across 13 tasks spanning retrieval, multi-hop tracing, aggregation, and question answering. RULER found that most open-source models effectively use less than 50\% of their training context. HELMET~\citep{Yen2024HELMET} further showed that effective context length is task-dependent: synthetic retrieval tasks do not predict performance on summarization or generation. BABILong~\citep{Kuratov2024BABILong} embeds reasoning tasks in long distractor text, finding degradation beyond 10\% of claimed capacity. An et al.~\citep{An2024EffCtx} traced the root cause to left-skewed position frequency distributions during pretraining: distant position indices are undertrained. \citet{Shi2025Entropy} derived relationships among cross-entropy loss, intrinsic entropy, and context length, proving that an optimal context length exists and that additional context beyond this point increases approximation loss.
+
+\subsection{Effective receptive fields and over-squashing}
+
+The theoretical receptive field (TRF) of a network is the maximal input span that can influence an output position. The \emph{effective receptive field} (ERF) describes the distribution of actual influence and typically occupies only a fraction of TRF, often exhibiting approximately Gaussian decay in deep convolutional networks~\citep{Luo2016EffectiveRF}. ECL generalizes ERF to arbitrary perturbation kernels and embedding spaces. Recent theoretical work on \emph{over-squashing}~\citep{Barbero2024OverSquashing} establishes that in decoder-only transformers, sensitivity to distant tokens decays with the sum of weighted paths through the attention graph, creating information bottlenecks that intensify with context length.
+
+\subsection{Feature attribution, perturbations, and sensitivity analysis}
+
+Attribution methods include gradient-based approaches (saliency, integrated gradients)~\citep{Sundararajan2017IG}, activation-difference methods (DeepLIFT)~\citep{Shrikumar2017DeepLIFT}, and perturbation-based approaches such as ISM~\citep{Nair2022fastISM,Schreiber2022Yuzu}. In genomics, the CREME toolkit~\citep{Toneyan2024CREME} shuffles distal context to measure context dependence, and SQUID~\citep{Seitz2024SQUID} fits interpretable surrogate models to in silico mutagenesis data. Variance-based sensitivity analysis provides a classical framework for decomposing output variance into coordinate contributions~\citep{Saltelli2002Saltelli,Saltelli2010VarianceSA}. \citet{Fel2021Sobol} applied Sobol attribution to neural network explanations, and \citet{Grunert2024Unifying} formally unified HDMR/FANOVA, Sobol indices, and ML interpretability methods through Hoeffding's decomposition.
+
+\subsection{Decision-theoretic comparison of information sources}
+
+Blackwell's theory of comparing experiments provides a partial order on information structures~\citep{Blackwell1951Comparison,Blackwell1953Equivalent}. We adapt this to compare models' \emph{context experiments}: each radius induces a channel from input sequence to embedding, enabling formal comparison of whether one model is more informative than another at a given context scale.
+
+\subsection{State-space models and sub-quadratic architectures}\label{sec:related_ssm}
+
+Transformers provide uniform access to all context positions but incur quadratic cost. State-space models (SSMs) such as S4~\citep{Gu2022S4}, Mamba~\citep{Gu2023Mamba}, and Mamba-2~\citep{Dao2024Mamba2} compress history into fixed-size latent states with linear cost. Mamba's selective state-space mechanism allows input-dependent gating. The Structured State Space Duality (SSD)~\citep{Dao2024Mamba2} establishes mathematical equivalence between SSMs and certain forms of linear attention. However, SSMs have provable limitations in exact recall: any model with fixed-size memory is fundamentally limited at copying long random strings~\citep{Jelassi2024Copying}. Hybrid architectures---predominantly SSM layers with sparse attention (as in Evo's StripedHyena)---have emerged as the dominant paradigm for long-range genomics. These architectural differences create qualitatively different ECL profiles: transformers have approximately uniform (but positionally biased) access within context, while SSMs have exponentially decaying fidelity.
+
+\subsection{Causal interpretability in genomics}
+
+The distinction between observational and interventional context analysis is critical for ECL measurement. Activation patching~\citep{Geiger2025CausalAbstraction} tests whether specific internal components causally depend on distant information. Sparse autoencoders (SAEs) trained on Evo~2 recover biologically meaningful features (coding regions, TFBS, tRNA) without supervision~\citep{Goodfire2025Evo2}, but these remain correlational. \citet{Kendiukhov2026MechInterp} demonstrated that attention-based regulatory network extraction fails in single-cell genomic models, with the most attention-aligned heads being computationally dispensable. These findings motivate interventional rather than observational ECL measurement.
+
+\subsection{Causal and interventional viewpoints}
+
+ECL depends on a perturbation mechanism, which can be interpreted as an intervention on input coordinates. This aligns with the do-calculus view of interventions~\citep{Pearl2009Causality} and clarifies the dependence of ECL on the perturbation distribution and baseline sequence model.

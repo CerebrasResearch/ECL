@@ -1,0 +1,86 @@
+% =============================================================================
+\section{Setup and Notation}\label{sec:setup}
+% =============================================================================
+
+\subsection{Sequences, indices, and context windows}
+Let $\cV$ be a finite alphabet (e.g., $\{A,C,G,T\}$ for DNA) and define the raw input space $\cX_{\mathrm{raw}} := \cV^{L_{\mathrm{bp}}}$, where $L_{\mathrm{bp}}$ is the number of base pairs. Models that use tokenization (BPE, $k$-mers) operate on a token space $\cX := \cV_{\mathrm{tok}}^{L}$ with $L \leq L_{\mathrm{bp}}$. We define a \emph{position mapping} $\phi:\{1,\dots,L\}\to\{1,\dots,L_{\mathrm{bp}}\}$ that maps token indices to base-pair coordinates, enabling conversion between token-space and bp-space ECL. For single-nucleotide models (HyenaDNA, Evo), $\phi$ is the identity.
+
+We index positions by $\{1,\dots,L\}$. For a reference position $r\in\{1,\dots,L\}$ and radius $\ell\in\{0,\dots,L\}$, define the symmetric window
+\[
+W_\ell(r) := \{ i\in\{1,\dots,L\} : |i-r|\le \ell\}.
+\]
+We also use distance $d(i,r):=|i-r|$. For directional analysis, define upstream and downstream half-windows:
+\[
+W_\ell^-(r) := \{i : r-\ell \le i < r\}, \qquad W_\ell^+(r) := \{i : r < i \le r+\ell\}.
+\]
+
+\subsection{Embedding-generating models}
+
+Let $(\cZ,\norm{\cdot}_\cZ)$ be a normed vector space (typically $\bbR^d$ with Euclidean norm). A sequence model (encoder or encoder-style component) is modeled as a measurable mapping $f:\cX \to \cZ$. For models producing multi-track outputs (e.g., Enformer predicts $T$ functional genomic tracks), we write $f:\cX \to \cZ^T$ and define per-track and aggregated ECL.
+
+We consider a distribution $P_X$ over $\cX$ representing the population of sequences (e.g., genomic windows sampled from a reference genome). The embedding random variable is $Z := f(X)$ when $X\sim P_X$.
+
+For architectures with multiple layers, we write $f^{(l)}:\cX \to \cZ_l$ for the embedding at layer $l$, recognizing that ECL may vary across layers. For models composed as $f = g \circ h$ (e.g., convolutional stem $h$ followed by attention blocks $g$), the composition structure constrains ECL through the receptive fields of each stage.
+
+\subsection{Perturbations and interventions}
+
+A perturbation mechanism modifies sequence coordinates in a controlled manner. We formalize this as a family of Markov kernels $\{\Pi_{S}\}_{S\subseteq\{1,\dots,L\}}$: for each set $S$, $\Pi_S(\cdot\mid x)$ is a distribution on $\cX$ that modifies coordinates in $S$ while preserving coordinates outside $S$.
+
+\begin{definition}[Distribution-aware perturbation kernel]\label{def:perturbation}
+A family $\{\Pi_S\}$ is \emph{distribution-aware} for $P_X$ if, for each $S$, coordinates outside $S$ are preserved and coordinates in $S$ are resampled according to a specified conditional model:
+\[
+X^{(S)} \sim \Pi_S(\cdot\mid X) \quad \text{such that}\quad X^{(S)}_{-S}=X_{-S},\quad X^{(S)}_{S}\sim P_{X_S\mid X_{-S}}(\cdot\mid X_{-S}).
+\]
+\end{definition}
+
+In practice, exact conditional resampling is rarely available. We consider four concrete perturbation types:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item \textbf{Random substitution} ($\Pi^{\mathrm{sub}}$): replace each nucleotide in $S$ with a uniformly random alternative.
+\item \textbf{Dinucleotide shuffle} ($\Pi^{\mathrm{shuf}}$): shuffle positions in $S$ preserving dinucleotide frequencies, as in CREME~\citep{Toneyan2024CREME}.
+\item \textbf{$k$-mer Markov resampling} ($\Pi^{\mathrm{Markov}}$): resample from a $k$-th order Markov model fitted to the local sequence context.
+\item \textbf{Generative infilling} ($\Pi^{\mathrm{gen}}$): mask positions in $S$ and infill from a pretrained masked language model.
+\end{enumerate}
+
+\subsection{Block perturbations}
+
+For computational efficiency on long sequences, we define block perturbations. Let $\{B_k\}_{k=1}^K$ be a partition of $\{1,\dots,L\}$ into contiguous blocks of size $b$, so $K = \lceil L/b \rceil$. A block perturbation $\Pi_{B_k}$ perturbs all positions in block $B_k$ simultaneously. Block size $b$ ranges from 1~bp (single-nucleotide) to 512~bp, trading resolution for computational cost.
+
+\subsection{Metrics on embeddings}
+
+We use a measurable discrepancy $d_\cZ:\cZ\times \cZ\to [0,\infty)$. The primary choice is squared Euclidean distance: $d_\cZ(z,z') := \norm{z-z'}_2^2$. Alternatives include cosine distance $d_{\cos}(z,z') := 1 - \frac{\ip{z}{z'}}{\norm{z}\norm{z'}}$, Mahalanobis distance $d_\Sigma(z,z') := (z-z')^\top \Sigma^{-1}(z-z')$ where $\Sigma = \Cov(f(X))$, and task-weighted quadratic forms $d_W(z,z') := (z-z')^\top W (z-z')$.
+
+\subsection{Notation summary}
+
+\begin{table}[H]
+\centering
+\caption{Notation summary.}
+\label{tab:notation}
+\small
+\begin{tabular}{@{}p{0.15\textwidth}p{0.80\textwidth}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+$\cV$ & Alphabet (e.g., $\{A,C,G,T\}$) \\
+$L$, $L_{\mathrm{bp}}$ & Sequence length (tokens), sequence length (base pairs) \\
+$\phi$ & Token-to-bp position mapping \\
+$\cX=\cV^L$ & Input sequence space \\
+$r$ & Reference position/locus \\
+$W_\ell(r)$ & Context window of radius $\ell$ around $r$ \\
+$W_\ell^\pm(r)$ & Upstream/downstream half-windows \\
+$f:\cX\to \cZ$ & Embedding-generating model \\
+$f^{(l)}$ & Layer-$l$ embedding \\
+$P_X$ & Data distribution on sequences \\
+$\Pi_S$ & Perturbation kernel on subset $S$ \\
+$X^{(S)}$ & Perturbed sequence (random) \\
+$d_\cZ$ & Embedding discrepancy (e.g., squared Euclidean) \\
+$\cI(i;r)$ & Influence energy at position $i$ relative to reference $r$ \\
+$\cI_{\le \ell}(r)$ & Cumulative influence within radius $\ell$ \\
+$\cI_{\mathrm{tot}}(r)$ & Total influence energy \\
+$\bar{\cI}(i;r)$ & Normalized influence (probability distribution) \\
+$\ECL_\beta(r)$ & Effective context length at level $\beta$ \\
+$\ECP(r)$ & Effective context profile: $\beta \mapsto \ECL_\beta(r)$ \\
+$\ECD(r)$ & Effective context dimension (entropy-based) \\
+$\AECP(r)$ & Area under the effective context profile \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,136 @@
+% =============================================================================
+\section{Core Framework: Influence Profiles and Effective Context Length}\label{sec:framework}
+% =============================================================================
+
+\subsection{Single-position influence energy}
+
+Fix reference position $r$. For each position $i$, define a single-site perturbation $X^{(i)}\sim \Pi_{\{i\}}(\cdot\mid X)$ and define the \emph{influence energy}
+\begin{equation}\label{eq:single_influence}
+\cI(i;r) \;:=\; \E\!\left[d_\cZ\!\left(f(X),\, f(X^{(i)})\right)\right].
+\end{equation}
+This measures the expected embedding change induced by perturbing position $i$ while holding other positions fixed.
+
+\begin{remark}[Dependence on perturbation choice]
+$\cI(i;r)$ depends on $\Pi_{\{i\}}$. Random substitution, dinucleotide shuffle, and conditional resampling yield different magnitudes. Our goal is not to remove this dependence but to formalize it and recommend reporting ECL as a function of perturbation type.
+\end{remark}
+
+\subsection{Normalized influence profile}
+
+Define the \emph{normalized influence profile} as a probability distribution over positions:
+\begin{equation}\label{eq:normalized_influence}
+\bar{\cI}(i;r) \;:=\; \frac{\cI(i;r)}{\cI_{\mathrm{tot}}(r)}, \qquad
+\cI_{\mathrm{tot}}(r) := \sum_{i=1}^L \cI(i;r),
+\end{equation}
+assuming $\cI_{\mathrm{tot}}(r) > 0$. The normalized profile $\bar{\cI}(\cdot;r)$ is a probability mass function on $\{1,\dots,L\}$, interpretable as the probability that a random perturbation effect originates at position $i$.
+
+\subsection{Distance-binned influence profile}
+
+Define the binned influence profile as a function of distance $d\ge 0$:
+\begin{equation}\label{eq:distance_profile}
+\cI(d;r) := \frac{1}{|\{i:|i-r|=d\}|}\sum_{i:|i-r|=d} \cI(i;r),
+\end{equation}
+with the convention that empty sums are zero near boundaries.
+
+\subsection{Cumulative influence and effective context length}
+
+Define cumulative influence within radius $\ell$:
+\begin{equation}\label{eq:cum_influence}
+\cI_{\le \ell}(r) := \sum_{i:|i-r|\le \ell} \cI(i;r)
+= \sum_{d=0}^{\ell} |\{i:|i-r|=d\}|\, \cI(d;r).
+\end{equation}
+
+\begin{definition}[Perturbation--variance effective context length]\label{def:ecl}
+Fix $\beta\in(0,1]$. The \emph{effective context length at level $\beta$} is
+\begin{equation}\label{eq:ecl_def}
+\ECL_\beta(r) \;:=\; \min\!\left\{\ell\in\{0,\dots,L\}:\; \cI_{\le \ell}(r) \ge \beta\, \cI_{\mathrm{tot}}(r)\right\}.
+\end{equation}
+\end{definition}
+
+This is a population-level definition. For finite datasets, we estimate $\cI(i;r)$ empirically and plug in.
+
+\subsection{Effective Context Profile (ECP)}
+
+\begin{definition}[Effective context profile]\label{def:ecp}
+The \emph{effective context profile} is the function $\ECP_r:(0,1] \to \{0,\dots,L\}$ defined by $\ECP_r(\beta) := \ECL_\beta(r)$. It is the complete non-decreasing curve characterizing context utilization, strictly more informative than any single $\ECL_\beta$.
+\end{definition}
+
+We define a scalar summary:
+\begin{definition}[Area under the ECP]\label{def:aecp}
+The \emph{area under the effective context profile} is
+\begin{equation}\label{eq:aecp}
+\AECP(r) := \int_0^1 \ECL_\beta(r)\, d\beta.
+\end{equation}
+\end{definition}
+
+\begin{proposition}[AECP equals mean influence distance]\label{prop:aecp}
+$\AECP(r) = \sum_{i=1}^L |i-r| \cdot \bar{\cI}(i;r)$.
+\end{proposition}
+\begin{proof}
+By a standard quantile identity, $\int_0^1 Q(\beta)\,d\beta = \E[D]$ where $Q$ is the quantile function and $D$ has CDF $F(d) = \cI_{\le d}(r)/\cI_{\mathrm{tot}}(r)$. The random variable $D$ has distribution $\bar{\cI}$ over distances, yielding the stated expectation.
+\end{proof}
+
+\subsection{Directional ECL}
+
+Genomic regulation is directionally asymmetric: promoters lie upstream, 3\textquotesingle UTR effects downstream. Define upstream and downstream influence:
+\begin{align}
+\cI^-(d;r) &:= \cI(r-d;r), \qquad d>0, \label{eq:upstream}\\
+\cI^+(d;r) &:= \cI(r+d;r), \qquad d>0, \label{eq:downstream}
+\end{align}
+and corresponding directional ECLs:
+\begin{equation}\label{eq:directional_ecl}
+\ECL_\beta^-(r) := \min\!\left\{\ell : \sum_{d=1}^{\ell} \cI^-(d;r) \ge \beta \sum_{d=1}^{L} \cI^-(d;r)\right\},
+\end{equation}
+and analogously for $\ECL_\beta^+(r)$. Asymmetry is quantified by the ratio $\ECL_\beta^+(r)/\ECL_\beta^-(r)$.
+
+\subsection{Effective Context Dimension (ECD)}
+
+\begin{definition}[Effective context dimension]\label{def:ecd}
+The \emph{effective context dimension} is the exponential of the entropy of the normalized influence profile:
+\begin{equation}\label{eq:ecd}
+\ECD(r) := \exp\!\left(-\sum_{i=1}^L \bar{\cI}(i;r) \log \bar{\cI}(i;r)\right).
+\end{equation}
+\end{definition}
+
+ECD measures the effective number of positions contributing to the embedding, analogous to the participation ratio in physics. A model concentrating influence on $k$ positions has $\ECD \approx k$; one spreading influence uniformly over $m$ positions has $\ECD = m$. ECD is invariant to the total scale of $\cI$ and is bounded: $1 \leq \ECD(r) \leq L$.
+
+\subsection{Interaction ECL}
+
+Single-site perturbations miss cooperative effects between distant positions. Define the \emph{pairwise interaction influence}:
+\begin{equation}\label{eq:interaction}
+\cI_{\mathrm{int}}(i,j;r) := \cI(\{i,j\};r) - \cI(i;r) - \cI(j;r),
+\end{equation}
+where $\cI(\{i,j\};r) := \E[d_\cZ(f(X), f(X^{(\{i,j\})}))]$ is the joint perturbation influence. Positive $\cI_{\mathrm{int}}$ indicates synergistic (super-additive) effects; negative indicates redundancy. The interaction ECL is the minimal radius capturing $\beta$-fraction of total interaction energy, revealing cooperativity between proximal and distal elements.
+
+\subsection{Context Decay Spectroscopy (CDS)}
+
+\begin{definition}[Context decay spectroscopy]\label{def:cds}
+Fit the distance-binned influence profile to a mixture of exponentials:
+\begin{equation}\label{eq:cds}
+\cI(d;r) \;\approx\; \sum_{k=1}^K a_k \, e^{-\lambda_k d},
+\end{equation}
+where $a_k > 0$ are amplitudes and $\lambda_k > 0$ are decay rates, estimated via non-negative least squares or EM. Each component represents a distinct \emph{context channel}: fast-decaying components ($\lambda_k$ large) capture local motif detection; slow-decaying components ($\lambda_k$ small) capture long-range regulatory integration. The \emph{spectral ECL} at level $\beta$ can be computed analytically from the fitted mixture.
+\end{definition}
+
+CDS is more informative than a single ECL number: it reveals whether context utilization is unimodal (one decay scale) or multi-scale (reflecting architecturally distinct processing channels).
+
+\subsection{Window ablation and complementary definitions}
+
+An alternative viewpoint perturbs \emph{all positions outside} a window and measures resulting embedding deviation. Define $S_\ell := \{i:|i-r|>\ell\}$ and:
+\begin{equation}\label{eq:out_ablation}
+\Delta_{\mathrm{out}}(\ell;r) := \E\!\left[d_\cZ\!\left(f(X),\, f(X^{(\mathrm{out},\ell)})\right)\right],
+\end{equation}
+where $X^{(\mathrm{out},\ell)}\sim \Pi_{S_\ell}(\cdot\mid X)$. Small $\Delta_{\mathrm{out}}(\ell;r)$ indicates that radius $\ell$ suffices. Under approximate additivity (\cref{prop:tail_add}), $\Delta_{\mathrm{out}}(\ell;r) \approx \sum_{|i-r|>\ell} \cI(i;r)$.
+
+\subsection{Global and task-aware ECL}
+
+Aggregate ECL across loci by $\ECL_\beta := \E_R[\ECL_\beta(R)]$ for a distribution of reference loci $R$ (e.g., transcription start sites). Condition on locus type, chromatin state, or gene class for class-specific ECL.
+
+For a downstream readout $g:\cZ\to\cY_{\mathrm{task}}$, define task-aware influence energies $\cI^{\mathrm{task}}(i;r) := \E[d_{\mathrm{task}}(g(f(X)), g(f(X^{(i)})))]$ with $d_{\mathrm{task}}$ a task loss, yielding task-aware ECL $\ECL^{\mathrm{task}}_\beta(r)$.
+
+\subsection{Genomic Needle-in-a-Haystack (gNIAH)}\label{sec:gniah}
+
+We propose a genomic analogue of the NLP Needle-in-a-Haystack test. Insert a known regulatory motif (e.g., a CTCF binding site or a GATA motif) at varying distances $d$ from the prediction center in a neutral (shuffled) background sequence. Define the \emph{gNIAH sensitivity}:
+\begin{equation}\label{eq:gniah}
+\gNIAH(d, m) := \E\!\left[d_\cZ\!\big(f(X_{\mathrm{neutral}}),\, f(X_{\mathrm{neutral}}^{+m@d})\big)\right],
+\end{equation}
+where $X_{\mathrm{neutral}}^{+m@d}$ denotes the neutral sequence with motif $m$ inserted at distance $d$. The gNIAH profile $d \mapsto \gNIAH(d,m)$ directly measures how far the model can ``see'' a specific regulatory signal, without requiring perturbation of natural sequences.

@@ -1,0 +1,9 @@
+% =============================================================================
+\section{Conclusion}\label{sec:conclusion}
+% =============================================================================
+
+We introduced a formal perturbation--variance framework for effective context length (ECL) in embedding-generating sequence models. Our definitions---including the Effective Context Profile (ECP), Effective Context Dimension (ECD), directional ECL, interaction ECL, and Context Decay Spectroscopy (CDS)---provide a multi-faceted, statistically rigorous characterization of how much input context a model actually uses. We established key theoretical properties including monotonicity, invariance, exponential decay bounds, minimax estimation rates, and connections to Sobol sensitivity analysis and Blackwell ordering. We developed a suite of estimators with non-asymptotic concentration guarantees, variance reduction techniques, and formal model comparison tests.
+
+The proposed experimental program---spanning ten protocols across six genomic models, four perturbation types, three locus classes, and biological ground truth---provides a comprehensive blueprint for empirical ECL assessment. Novel contributions including the genomic Needle-in-a-Haystack (gNIAH), ECL-as-training-diagnostic, and cross-model transfer validation extend the framework beyond measurement toward actionable model development insights.
+
+ECL complements nominal context length by quantifying actual context utilization, enabling principled model comparison and mechanistic interpretation. As genomic language models continue to scale toward chromosome- and genome-length inputs, understanding what they effectively see---not just what they nominally accept---becomes essential for both scientific reliability and computational efficiency.

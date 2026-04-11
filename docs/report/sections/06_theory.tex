@@ -1,0 +1,157 @@
+% =============================================================================
+\section{Main Theoretical Results}\label{sec:theory}
+% =============================================================================
+
+\subsection{Basic properties: monotonicity and invariances}
+
+\begin{proposition}[Monotonicity in $\beta$]\label{prop:mono_beta}
+For fixed $r$, the mapping $\beta\mapsto \ECL_\beta(r)$ is non-decreasing on $(0,1]$.
+\end{proposition}
+\begin{proof}
+See \cref{app:proofs}.
+\end{proof}
+
+\begin{proposition}[Invariance under isometries]\label{prop:isometry}
+Assume $d_\cZ(z,z')=\norm{z-z'}_2^2$. If $T:\bbR^d\to\bbR^d$ is an orthogonal transformation, then $\ECL_\beta(r)$ is identical for $f$ and $T\circ f$.
+\end{proposition}
+\begin{proof}
+Orthogonality preserves Euclidean distances: $\norm{Tz-Tz'}_2^2 = \norm{z-z'}_2^2$. All influence energies and their cumulative sums are unchanged.
+\end{proof}
+
+\begin{remark}[Invariance under general linear maps via whitening]
+If $T$ is invertible but not orthogonal, Euclidean distances change. Using Mahalanobis distance $d_\Sigma$ with $\Sigma = \Cov(f(X))$ restores invariance under invertible linear transforms, since whitened embeddings $\Sigma^{-1/2}(f(X)-\E[f(X)])$ have identity covariance.
+\end{remark}
+
+\subsection{ECL under exponential influence decay}\label{sec:exp_decay}
+
+Effective receptive field theory~\citep{Luo2016EffectiveRF} suggests that influence often decays approximately exponentially (or Gaussian) with distance. We formalize this.
+
+\begin{theorem}[ECL bound under exponential decay]\label{thm:exp_decay}
+Assume $\cI(d;r) \le C e^{-\lambda d}$ for constants $C > 0$, $\lambda > 0$, and all $d \ge 0$. Assume positions at distance $d$ have multiplicity $n_d \le 2$ (interior reference). Then
+\begin{equation}\label{eq:exp_bound}
+\ECL_\beta(r) \;\le\; \frac{1}{\lambda}\log\frac{1}{1-\beta} + \frac{1}{\lambda}\log\frac{2C}{\lambda \cI_{\mathrm{tot}}(r)} + 1.
+\end{equation}
+In particular, $\ECL_\beta(r) = O\!\left(\lambda^{-1}\log\frac{1}{1-\beta}\right)$ as $\beta \to 1$.
+\end{theorem}
+\begin{proof}
+See \cref{app:proofs}.
+\end{proof}
+
+This gives an interpretable formula: ECL scales as $1/\lambda$ (inverse decay rate) times a logarithmic threshold factor. Models with slower decay ($\lambda$ small) have proportionally larger ECL.
+
+\subsection{Architectural locality implies bounded ECL}
+
+\begin{assumption}[Exact locality]\label{ass:exact_local}
+There exists $R^\star\in\bbN$ such that for all $x,x'\in\cX$, $x_{W_{R^\star}(r)} = x'_{W_{R^\star}(r)}$ implies $f(x)=f(x')$.
+\end{assumption}
+
+\begin{proposition}[ECL upper bound under exact locality]\label{prop:ecl_local}
+Under \cref{ass:exact_local}, $\ECL_\beta(r) \le R^\star$ for any $\beta\in(0,1]$.
+\end{proposition}
+\begin{proof}
+If $|i-r|>R^\star$, then perturbing coordinate $i$ leaves $W_{R^\star}(r)$ unchanged, so $\cI(i;r)=0$. Hence $\cI_{\le R^\star}(r)=\cI_{\mathrm{tot}}(r)$.
+\end{proof}
+
+\begin{proposition}[Compositional ECL bound]\label{prop:composition}
+For an architecture $f = g \circ h$ where $h:\cX \to \cH$ has exact receptive field $R_h$ per position and $g:\cH \to \cZ$ has exact receptive field $R_g$ per position (in the intermediate representation), then $\ECL_\beta(r) \le R_h \cdot R_g$.
+\end{proposition}
+\begin{proof}
+Position $r$ in the output depends on intermediate positions within radius $R_g$, each of which depends on input positions within radius $R_h$. By triangle inequality on index distances, the total input dependence radius is at most $R_h \cdot R_g$.
+\end{proof}
+
+\begin{remark}[Dilated convolutions]
+For a stack of $D$ dilated convolutional layers with kernel size $k$ and dilation rates $d_1, \dots, d_D$, the theoretical receptive field is $R^\star = \sum_{l=1}^D (k-1) d_l$. For Basenji's architecture with exponentially increasing dilations, $R^\star = O(k \cdot 2^D)$.
+\end{remark}
+
+\subsection{Variance-based sensitivity and Sobol connections}\label{sec:sobol}
+
+We relate perturbation ECL to classical variance decompositions. Let $\varphi:\cZ\to \bbR$ be a scalar summary of embeddings and $Y:=\varphi(f(X))$.
+
+\begin{theorem}[Perturbation influence equals twice Sobol total-effect variance (additive case)]\label{thm:sobol_equiv}
+Assume (i) $f(X) = \sum_{i=1}^L g_i(X_i)$ (additive model), (ii) coordinates $\{X_i\}$ are independent under $P_X$, (iii) perturbation replaces $X_i$ with an independent copy $X_i' \sim P_i$, and (iv) $d_\cZ = \norm{\cdot}_2^2$. Then for any scalar projection $\varphi:\cZ \to \bbR$ with $Y = \varphi(f(X))$:
+\[
+\cI(i;r) \;=\; 2\,\Var(g_i(X_i)) \;=\; 2\,V_{\mathrm{tot}} \cdot S_i^T,
+\]
+where $S_i^T$ is the Sobol total-effect index and $V_{\mathrm{tot}} = \Var(Y)$.
+\end{theorem}
+\begin{proof}
+See \cref{app:additive}.
+\end{proof}
+
+Under the additive model, ECL based on perturbation influence is thus equivalent to the Sobol total-effect radius. Non-additive models introduce interaction terms; see \cref{sec:interaction_ecl_theory} for quantitative bounds.
+
+\subsection{Tail approximation under weak additivity}\label{sec:interaction_ecl_theory}
+
+\begin{assumption}[Weak interaction/additivity]\label{ass:add}
+There exists a decomposition $f(X) = \sum_{i=1}^L g_i(X_i) + \epsilon(X)$, where $\epsilon$ is a small interaction remainder: $\E[\norm{\epsilon(X)}^2] \le \eta^2$.
+\end{assumption}
+
+\begin{proposition}[Tail approximation under additivity]\label{prop:tail_add}
+Under \cref{ass:add} with independent coordinate resampling and $d_\cZ = \norm{\cdot}_2^2$:
+\[
+\left|\Delta_{\mathrm{out}}(\ell;r) - \sum_{|i-r|>\ell}\cI(i;r)\right| \;\le\; 4\eta\sqrt{\sum_{|i-r|>\ell}\cI(i;r)} + 4\eta^2.
+\]
+\end{proposition}
+\begin{proof}
+See \cref{app:additive}.
+\end{proof}
+
+\subsection{Effective receptive field: a linearized derivation}\label{sec:erf}
+
+Consider a locally linear model $y_r = \sum_i h_{r-i}\, u_i$ with impulse response $h$.
+
+\begin{proposition}[Influence profile equals squared impulse response]\label{prop:linear_influence}
+If perturbation at $i$ replaces $u_i$ by an independent copy with $\E[(u_i-u_i')^2]=\sigma^2$, then $\cI(i;r) = h_{r-i}^2\, \sigma^2$.
+\end{proposition}
+\begin{proof}
+$y_r-y_r^{(i)} = h_{r-i}(u_i-u_i')$. Squaring and taking expectation yields $h_{r-i}^2\sigma^2$.
+\end{proof}
+
+\subsection{Model comparison via Blackwell ordering}\label{sec:blackwell}
+
+Fix a radius $\ell$ and define the context-limited embedding $Z_\ell := f(X^{(\mathrm{out},\ell)})$, where $X^{(\mathrm{out},\ell)}$ perturbs outside $W_\ell(r)$. For a downstream decision problem with action space $\cA$, loss $\ell_{\mathrm{dec}}:\cA\times \cY\to\bbR$, and target $Y$, the Bayes risk is
+$\cR_f(\ell) := \inf_{\delta:\cZ\to \cA} \E[\ell_{\mathrm{dec}}(\delta(Z_\ell),Y)]$.
+
+\begin{definition}[Blackwell dominance for context experiments]\label{def:blackwell}
+Model $f$ \emph{Blackwell-dominates} $g$ at radius $\ell$ if there exists a Markov kernel $K$ such that $g(X^{(\mathrm{out},\ell)}) \stackrel{d}{=} K(f(X^{(\mathrm{out},\ell)}))$.
+\end{definition}
+
+\begin{theorem}[Blackwell dominance implies no worse Bayes risk]\label{thm:blackwell}
+If $f$ Blackwell-dominates $g$ at radius $\ell$, then $\cR_f(\ell) \le \cR_g(\ell)$ for every decision problem.
+\end{theorem}
+\begin{proof}
+Direct consequence of Blackwell's comparison theorem~\citep{Blackwell1951Comparison}: any decision rule based on $g$ can be simulated from $f$ via $K$.
+\end{proof}
+
+\begin{proposition}[ECL ordering does not imply Blackwell dominance]\label{prop:ecl_not_blackwell}
+There exist models $f,g$ with $\ECL_\beta(f) < \ECL_\beta(g)$ for all $\beta$ yet neither Blackwell-dominates the other.
+\end{proposition}
+\begin{proof}
+See \cref{app:proofs} for an explicit counterexample.
+\end{proof}
+
+\begin{proposition}[Sufficient condition for risk ordering]\label{prop:risk_ordering}
+If $f$ Blackwell-dominates $g$ at every radius $\ell \le \ell_0$, then $\cR_f(\ell) \le \cR_g(\ell)$ for all $\ell \le \ell_0$ and all decision problems. In particular, model $f$ extracts at least as much useful information from any context budget $\ell \le \ell_0$.
+\end{proposition}
+
+\subsection{Invariance under sufficient statistics}
+
+\begin{theorem}[ECL invariance under sufficient statistics]\label{thm:sufficient}
+Let $g:\cZ\to\cY_{\mathrm{task}}$ be a downstream predictor and $T:\cZ \to \cZ'$ a sufficient statistic for $Y$ given $Z = f(X)$. Then $\ECL^{\mathrm{task}}_\beta(r)$ computed using the composition $g \circ f$ equals $\ECL^{\mathrm{task}}_\beta(r)$ computed using $g \circ T \circ f$.
+\end{theorem}
+\begin{proof}
+Sufficiency implies $P(Y \mid Z) = P(Y \mid T(Z))$, so any decision rule based on $Z$ achieves the same Bayes risk as one based on $T(Z)$. The task-aware influence energies are therefore identical.
+\end{proof}
+
+\subsection{Minimax estimation rate}
+
+\begin{theorem}[Minimax rate for ECL estimation]\label{thm:minimax}
+Let $\cF_M$ be the class of models with influence variables $U_i$ bounded in $[0,M]$, and consider estimating $\ECL_\beta(r)$ from $n$ i.i.d.\ sequence-perturbation pairs. Then
+\[
+\inf_{\hat{\ell}} \sup_{f \in \cF_M} \E\!\left[(\hat{\ell} - \ECL_\beta(r))^2\right] \;=\; \Omega\!\left(\frac{M^2}{\gamma^2 n}\right),
+\]
+where $\gamma$ is the margin at the threshold crossing. The Monte Carlo estimator (\cref{alg:mc_ecl}) achieves this rate up to logarithmic factors.
+\end{theorem}
+\begin{proof}
+See \cref{app:proofs}. The lower bound follows from a two-point testing argument; the upper bound from \cref{thm:ecl_stability} combined with Hoeffding concentration.
+\end{proof}

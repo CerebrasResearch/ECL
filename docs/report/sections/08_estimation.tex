@@ -1,0 +1,87 @@
+% =============================================================================
+\section{Estimation Theory}\label{sec:estimation}
+% =============================================================================
+
+\subsection{Bernstein concentration for influence energy estimators}
+
+For a fixed position $i$, define $U_i := d_\cZ(f(X), f(X^{(i)}))$ so that $\cI(i;r)=\E[U_i]$ and $\widehat{\cI}(i;r)=\frac{1}{n}\sum_{t=1}^n U_i^{(t)}$.
+
+\begin{theorem}[Bernstein concentration]\label{thm:bernstein}
+Under \cref{ass:subgauss}, or alternatively assuming $0 \le U_i \le M$ almost surely with $\Var(U_i) = \sigma_i^2$, for any $\delta\in(0,1)$:
+\begin{equation}\label{eq:bernstein}
+\Pr\!\left(\abs{\widehat{\cI}(i;r)-\cI(i;r)} \ge t\right) \le 2\exp\!\left(-\frac{nt^2/2}{\sigma_i^2 + Mt/3}\right).
+\end{equation}
+Setting the right-hand side to $\delta$ and solving for $t$ yields the confidence radius
+\begin{equation}
+\varepsilon_n(\delta) = \frac{M\log(2/\delta)}{3n} + \sqrt{\frac{2\sigma_i^2 \log(2/\delta)}{n}}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+This is Bernstein's inequality for bounded random variables. When $\sigma_i^2 \ll M^2$ (typical: most positions have near-zero influence), the Bernstein bound is substantially tighter than Hoeffding's $O(M/\sqrt{n})$ bound.
+\end{proof}
+
+\subsection{Propagation to cumulative influence and ECL}
+
+\begin{theorem}[ECL stability under uniform estimation error]\label{thm:ecl_stability}
+Assume $0<\cI_{\mathrm{tot}}(r)<\infty$ and define the \emph{margin}
+$\gamma := \min_{\ell\neq \ECL_\beta(r)} \abs{\cI_{\le \ell}(r)-\beta \cI_{\mathrm{tot}}(r)}$.
+If $\max_i \abs{\widehat{\cI}(i;r)-\cI(i;r)} \le \gamma/(4L)$ and $\abs{\widehat{\cI}_{\mathrm{tot}}(r)-\cI_{\mathrm{tot}}(r)}\le \gamma/4$, then $\widehat{\ECL}_\beta(r)=\ECL_\beta(r)$.
+\end{theorem}
+\begin{proof}
+For each $\ell$, $|\widehat{\cI}_{\le \ell}(r)-\cI_{\le \ell}(r)| \le L \cdot \max_i |\widehat{\cI}(i;r)-\cI(i;r)| \le \gamma/4$. Combined with $|\widehat{\cI}_{\mathrm{tot}} - \cI_{\mathrm{tot}}| \le \gamma/4$, the sign of $\widehat{\cI}_{\le \ell}(r) - \beta\widehat{\cI}_{\mathrm{tot}}(r)$ matches that of $\cI_{\le \ell}(r) - \beta\cI_{\mathrm{tot}}(r)$ for all $\ell$ with margin $\ge \gamma$, preserving the minimizer.
+\end{proof}
+
+\subsection{Sample complexity for ECL estimation}
+
+\begin{corollary}[Sample complexity]\label{cor:sample_complexity}
+To estimate $\ECL_\beta(r)$ exactly (i.e., $\widehat{\ECL}_\beta = \ECL_\beta$) with probability $\ge 1-\delta$, it suffices to use
+\begin{equation}\label{eq:sample_complexity}
+n \;\ge\; \frac{128\, L^2 M^2}{\gamma^2} \log\frac{2L}{\delta}
+\end{equation}
+Monte Carlo samples per position.
+\end{corollary}
+\begin{proof}
+Apply \cref{thm:bernstein} with a union bound over $L$ positions, requiring $\max_i |\widehat{\cI}(i;r) - \cI(i;r)| \le \gamma/(4L)$ with probability $\ge 1-\delta$. Each position requires $n$ satisfying $2\exp(-n\gamma^2/(32L^2 M^2)) \le \delta/L$.
+\end{proof}
+
+\subsection{Antithetic variance reduction}
+
+\begin{proposition}[Antithetic perturbation estimator]\label{prop:antithetic}
+For perturbation kernels admitting paired draws $(X^{(i,+)}, X^{(i,-)})$ such that $\Cov(d_\cZ(f(X),f(X^{(i,+)})),\, d_\cZ(f(X),f(X^{(i,-)}))) < 0$, the antithetic estimator
+\[
+\widehat{\cI}^{\mathrm{anti}}(i;r) := \frac{1}{2n}\sum_{t=1}^n \left[d_\cZ(f(X^{(t)}),f(X^{(t,i,+)})) + d_\cZ(f(X^{(t)}),f(X^{(t,i,-)}))\right]
+\]
+is unbiased with variance $\le \Var(\widehat{\cI}(i;r))$, achieving up to 2$\times$ variance reduction.
+\end{proposition}
+
+A practical construction for DNA: if the original perturbation replaces nucleotide $X_i$ with a specific alternative $a$, the antithetic partner replaces $X_i$ with the complementary nucleotide (A$\leftrightarrow$T, C$\leftrightarrow$G).
+
+\subsection{Importance sampling for tail estimation}
+
+Positions far from $r$ have small influence but there are many such positions. Naive uniform sampling wastes budget on uninformative positions. Let $q(i)$ be a proposal distribution over positions.
+
+\begin{proposition}[Importance-weighted influence estimator]\label{prop:importance}
+The importance-weighted estimator
+\[
+\widehat{\cI}^{\mathrm{IS}}(i;r) := \frac{\bar{\cI}_0(i;r)}{q(i)} \cdot \frac{1}{n}\sum_{t=1}^n d_\cZ(f(X^{(t)}), f(X^{(t,i)}))
+\]
+where positions $i$ are sampled $\propto q(i)$, is unbiased for $\cI(i;r)$ when $q(i) \propto \bar{\cI}_0(i;r)$ is a pilot estimate. Optimal $q^\star(i) \propto \sigma_i \bar{\cI}_0(i;r)$ minimizes total variance.
+\end{proposition}
+
+In practice, a coarse pilot run (\cref{alg:adaptive}, Phase~1) provides $\bar{\cI}_0$, and the refinement phase allocates samples according to $q^\star$.
+
+\subsection{Asymptotic normality}
+
+\begin{theorem}[CLT for influence estimators]\label{thm:clt}
+Under \cref{ass:meas} with $\Var(U_i) = \sigma_i^2 < \infty$,
+\[
+\sqrt{n}\,(\widehat{\cI}(i;r) - \cI(i;r)) \;\xrightarrow{d}\; \mathcal{N}(0,\, \sigma_i^2)
+\]
+as $n\to\infty$. This yields asymptotic $(1-\alpha)$ confidence intervals $\widehat{\cI}(i;r) \pm z_{1-\alpha/2}\,\hat{\sigma}_i/\sqrt{n}$.
+\end{theorem}
+
+\subsection{Permutation testing for ECL comparison}
+
+\begin{proposition}[Validity of paired permutation test]\label{prop:permtest}
+For two models $f,g$ evaluated at common loci $\{r_1,\dots,r_N\}$, the sign-flip permutation test (\cref{alg:compare}) controls Type~I error at level $\alpha$ for $H_0: \E[\ECL_\beta^f(R) - \ECL_\beta^g(R)] = 0$ under exchangeability of the differences $D_j := \widehat{\ECL}_\beta^f(r_j) - \widehat{\ECL}_\beta^g(r_j)$.
+\end{proposition}

@@ -1,0 +1,55 @@
+% =============================================================================
+\section{Connections to NLP Context Evaluation}\label{app:nlp}
+% =============================================================================
+
+This appendix formally maps between genomic ECL and the NLP effective context length literature.
+
+\subsection{NIAH as a special case of influence energy}
+
+The Needle-in-a-Haystack (NIAH) test inserts a specific fact (the ``needle'') at position $d$ in a distractor context (the ``haystack'') and tests whether the model retrieves it. In our framework, this corresponds to a specific perturbation kernel and influence energy:
+
+Let $X_{\mathrm{hay}}$ be a haystack sequence and $X_{\mathrm{hay}}^{+\mathrm{needle}@d}$ be the sequence with the needle inserted at position $d$. The NIAH sensitivity is:
+\[
+\mathrm{NIAH}(d) = \E\!\left[d_{\mathrm{task}}\!\left(g(f(X_{\mathrm{hay}})),\, g(f(X_{\mathrm{hay}}^{+\mathrm{needle}@d}))\right)\right],
+\]
+which is exactly a task-aware influence energy $\cI^{\mathrm{task}}(d; r_{\mathrm{query}})$ under a specific ``insertion'' perturbation rather than a ``replacement'' perturbation. The NIAH-based ECL is $\max\{d : \mathrm{NIAH}(d) > \tau\}$, which is a special case of task-aware ECL$_\beta$ with a hard threshold $\tau$ replacing the fractional threshold $\beta$.
+
+\subsection{RULER operationalization and its relation to perturbation ECL}
+
+RULER~\citep{Hsieh2024RULER} defines ECL as:
+\[
+\ECL_{\mathrm{RULER}} = \max\{L : \mathrm{Score}(L) \ge \mathrm{Score}(L_{\mathrm{ref}})\},
+\]
+where $\mathrm{Score}(L)$ is average performance across 13 tasks at context length $L$. This is a \emph{task-specific, threshold-based} ECL that depends on the task suite.
+
+Our perturbation-variance ECL is complementary:
+\begin{itemize}[leftmargin=2em]
+\item It operates at the embedding level (task-agnostic) or task-specific level.
+\item It is a continuous, fractional measure rather than binary.
+\item It provides statistical uncertainty quantification.
+\item It does not require carefully designed ``needles'' or ``tasks''---any perturbation kernel suffices.
+\end{itemize}
+
+\subsection{LongPPL and key-token identification}
+
+LongPPL~\citep{Fang2024LongPPL} identifies key tokens by comparing next-token predictions with and without long context:
+\[
+\mathrm{KeyScore}(i) = \log P(x_i \mid x_{<i}) - \log P(x_i \mid x_{i-w:i}),
+\]
+where $w$ is a short context window. Tokens with large positive KeyScore genuinely benefit from long-range context.
+
+In our framework, KeyScore is approximately related to out-of-window ablation:
+\[
+\mathrm{KeyScore}(i) \approx -\Delta_{\mathrm{out}}(w; i)
+\]
+under a log-loss discrepancy. Key tokens are positions where $\Delta_{\mathrm{out}}$ is large, i.e., positions whose predictions degrade substantially when distal context is removed.
+
+\subsection{Lost-in-the-middle as position-dependent ECL}
+
+The U-shaped performance curve in ``Lost in the Middle''~\citep{Liu2024LostInMiddle} can be interpreted as position-dependent influence energy. If we define a ``query position'' $r$ at the end of the sequence (where the model generates its answer), the influence profile $\cI(i;r)$ should ideally be uniform across $i$ (all context positions equally useful). The U-shape reveals $\cI(i;r)$ is high for $i$ near the beginning and end but low for $i$ in the middle---a form of position-dependent ECL degradation.
+
+In genomics, the analogue would be if models preferentially attend to positions near the edges of their input window while underweighting the center. This can be tested by plotting $\cI(d;r)$ for reference positions $r$ at various locations within the input window.
+
+\subsection{Intrinsic entropy and optimal context length}
+
+\citet{Shi2025Entropy} proved that an optimal context length $L^\star$ exists, beyond which additional context increases approximation loss. In our framework, this corresponds to the regime where $\cI(d;r) < 0$ (negative influence), meaning that additional context \emph{hurts} predictions. This can occur when out-of-distribution perturbations or distant noise degrades the model. Our framework can detect this by checking whether $\Delta_{\mathrm{out}}(\ell;r)$ is non-monotone in $\ell$: if $\Delta_{\mathrm{out}}$ \emph{decreases} as $\ell$ grows (removing more context improves predictions), the model suffers from context poisoning.

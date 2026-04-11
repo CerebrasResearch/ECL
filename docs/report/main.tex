@@ -1,0 +1,84 @@
+\documentclass[12pt]{cs}
+
+% =============================================================================
+% Effective Context Length — Main Entry Point
+% =============================================================================
+
+% Packages
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{makecell}
+
+% Algorithm2e cosmetics
+\SetKwComment{Comment}{$\triangleright$\ }{}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+
+% cleveref format for algorithm2e
+\crefname{algocf}{Algorithm}{Algorithms}
+\Crefname{algocf}{Algorithm}{Algorithms}
+
+% Local macros
+\input{math_commands.tex}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Title block
+\title{Effective Context Length: A Perturbation--Variance Framework for Estimating and Comparing Context Utilization in Sequence Models}
+
+\author[1]{Omid Shams Solari}
+\affiliation[1]{Cerebras Systems}
+
+% Abstract
+\input{sections/00_abstract}
+
+\begin{document}
+\maketitle
+
+% Main content
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_setup}
+\input{sections/04_formulation}
+\input{sections/05_framework}
+\input{sections/06_theory}
+\input{sections/07_algorithms}
+\input{sections/08_estimation}
+\input{sections/09_extensions}
+\input{sections/10_connections}
+\input{sections/11_experiments}
+\input{sections/12_discussion}
+\input{sections/13_conclusion}
+
+% Bibliography
+\bibliographystyle{iclr2026_conference}
+\bibliography{reference/references}
+
+% Appendices
+\beginappendix
+\input{sections/appendix_a}
+\input{sections/appendix_b}
+\input{sections/appendix_c}
+\input{sections/appendix_d}
+\input{sections/appendix_e}
+\input{sections/appendix_f}
+\input{sections/appendix_g}
+\input{sections/appendix_h}
+
+\end{document}

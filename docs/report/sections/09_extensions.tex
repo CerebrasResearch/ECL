@@ -1,0 +1,40 @@
+% =============================================================================
+\section{Extensions, Generalizations, and Variants}\label{sec:extensions}
+% =============================================================================
+
+\subsection{Whitened and task-weighted embedding metrics}
+
+To mitigate embedding reparameterization effects, define the covariance matrix $\Sigma := \Cov(f(X))$ and use Mahalanobis distance $d_\Sigma(z,z') := (z-z')^\top \Sigma^{-1}(z-z')$. This yields invariance under invertible linear transforms. In practice, $\Sigma$ is estimated from a held-out set and regularized ($\Sigma + \lambda I$) for numerical stability. Task-weighted metrics incorporate downstream sensitivity via a positive-definite weight matrix $W$: $d_W(z,z') := (z-z')^\top W(z-z')$.
+
+\subsection{Conditioning on sequence content and locus class}
+
+ECL can be conditional on covariates: GC content, CpG islands, chromatin state, or gene regulatory class. Define conditional influence energies
+$\cI(i;r\mid C=c) := \E[d_\cZ(f(X),f(X^{(i)})) \mid C=c]$,
+yielding a distribution of ECL across contexts. This reveals heterogeneity: we expect longer ECL at developmental gene loci (known for long-range regulation) than at housekeeping gene promoters.
+
+\subsection{Comparing models across nominal lengths}
+
+When models have different nominal input lengths ($L_f \neq L_g$), comparisons require alignment:
+(i) define a common window $L_0 = \min(L_f, L_g)$ and extract centered subwindows,
+(ii) compute ECL in physical distance units (base pairs) via the position mapping $\phi$,
+(iii) report boundary-corrected profiles (exclude positions within $R_{\mathrm{boundary}}$ of edges).
+
+\subsection{Multi-track ECL for functional genomics models}
+
+Models like Enformer and Borzoi predict thousands of output tracks simultaneously. Define per-track influence $\cI^{(t)}(i;r) := \E[|f^{(t)}(X) - f^{(t)}(X^{(i)})|^2]$ for track $t$, yielding per-track ECL. The aggregated ECL uses $d_\cZ(z,z') = \sum_t w_t |z^{(t)} - z'^{(t)}|^2$ with track weights $w_t$.
+
+Track-specific ECL can reveal that a model uses long-range context for some assays (e.g., CAGE, capturing enhancer-mediated expression) but not others (e.g., H3K4me3, primarily promoter-proximal).
+
+\subsection{ECL as a training diagnostic}
+
+We propose tracking ECL during model training as a diagnostic:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item Compute $\widehat{\ECL}_{0.9}(r)$ at fixed loci every $k$ training steps.
+\item Plot ECL vs.\ training step alongside training loss.
+\item \textbf{Hypothesis:} ECL grows during training as the model progressively learns to integrate distal context. If ECL saturates before loss saturates, the model has learned its context utilization early and subsequent training refines local features.
+\item If ECL grows monotonically with training, longer training curricula or progressive context extension may be beneficial.
+\end{enumerate}
+
+\subsection{Cross-model ECL transfer validation}
+
+Given model $f$ with estimated $\ECL^f_{0.9}$, train a context-limited version $f_\ell$ using only $\ell = \ECL^f_{0.9}$ base pairs of context. If $f_\ell$ matches $f$'s downstream performance, the ECL estimate is validated: the model genuinely uses no more than $\ell$ base pairs of context. If $f_\ell$ underperforms, ECL was underestimated (interaction effects or higher-order dependencies matter beyond what single-site perturbations capture).

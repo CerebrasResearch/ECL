@@ -1,0 +1,60 @@
+% =============================================================================
+\section{Computational Complexity Analysis}\label{app:complexity}
+% =============================================================================
+
+This appendix provides detailed cost analysis for each algorithm in terms of forward passes, memory, and estimated wall-clock time.
+
+\subsection{Cost model}
+
+Let $C_f(L)$ denote the cost of a single forward pass of model $f$ on a sequence of length $L$. For transformers, $C_f(L) = O(L^2 d)$; for SSMs, $C_f(L) = O(L d_{\mathrm{state}})$; for CNNs with $D$ dilated layers of kernel size $k$, $C_f(L) = O(L D k d)$.
+
+\subsection{Algorithm cost summary}
+
+\begin{table}[H]
+\centering
+\caption{Computational cost of each algorithm.}
+\label{tab:complexity}
+\small
+\begin{tabular}{@{}l l l l@{}}
+\toprule
+\textbf{Algorithm} & \textbf{Forward passes} & \textbf{Memory} & \textbf{Notes} \\
+\midrule
+\ref{alg:mc_ecl}: Full MC & $n(L+1)$ & $O(Ld)$ & Infeasible for $L>10^4$ \\
+\ref{alg:binned}: Binned & $n(1 + D \cdot \bar{m})$ & $O(Dd)$ & $\bar{m}$ = avg samples/bin \\
+\ref{alg:bootstrap}: Bootstrap & $B \times$ (recompute from stored) & $O(nDd)$ & No new forward passes \\
+\ref{alg:multiscale}: Multi-scale & $|\cB| \times n K_b$ & $O(K_b d)$ & $K_b = L/b$ blocks \\
+\ref{alg:compare}: Comparison & $2 \times N \times$ \ref{alg:binned} cost & $O(NDd)$ & Paired across $N$ loci \\
+\ref{alg:surrogate}: Surrogate & $M \times n$ & $O(Md)$ & $M \ll L$ sampled positions \\
+\ref{alg:adaptive}: Adaptive & $n_{\mathrm{tot}}(G + G')$ & $O(Gd)$ & Two-phase budget \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Practical estimates}
+
+For a concrete example, consider Enformer ($L=196{,}608$ bp, $\sim$0.5 seconds per forward pass on an A100 GPU):
+
+\paragraph{\cref{alg:mc_ecl} (full MC).}
+$n=100$ samples $\times$ $L \approx 200{,}000$ positions = $20 \times 10^6$ forward passes $\approx 115$ GPU-days. \textbf{Infeasible.}
+
+\paragraph{\cref{alg:binned} (binned).}
+$n=100$ samples, $D=100$ distance bins, $m(d)=10$ per bin = $100 \times 100 \times 10 = 100{,}000$ forward passes $\approx$ 14 GPU-hours. \textbf{Feasible.}
+
+\paragraph{\cref{alg:surrogate} (surrogate).}
+$M=500$ sampled positions, $n=50$ = $25{,}000$ forward passes $\approx$ 3.5 GPU-hours. \textbf{Highly feasible.}
+
+For Evo~2 (40B parameters, $\sim$10 seconds per forward pass), multiply all estimates by $\sim$20$\times$.
+
+\subsection{Parallelization strategy}
+
+The main computational bottleneck---independent forward passes for different perturbations---is embarrassingly parallel. We recommend:
+\begin{enumerate}[leftmargin=2em, label=(\roman*)]
+\item \textbf{Data parallelism:} distribute sequences across GPUs.
+\item \textbf{Position parallelism:} for each sequence, perturbations at different positions can be batched.
+\item \textbf{Locus parallelism:} different loci are fully independent.
+\end{enumerate}
+With 8 A100 GPUs, the binned estimator for Enformer across 500 loci completes in $\sim$1 day.
+
+\subsection{Memory requirements}
+
+Storing all Monte Carlo samples for bootstrap requires $O(n \times D \times d)$ floating-point numbers. For $n=100$, $D=100$, $d=3{,}072$ (Enformer embedding dimension): $\sim$235 MB per locus. For 500 loci: $\sim$115 GB total, manageable with disk-backed storage.

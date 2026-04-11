@@ -1,0 +1,27 @@
+% =============================================================================
+\section{Connections to Prior Theory}\label{sec:connections}
+% =============================================================================
+
+\subsection{From ERF to ECL}
+
+Effective receptive field analyses show that gradients concentrate near the center with approximately Gaussian decay in deep convolutional networks~\citep{Luo2016EffectiveRF}. Our influence profile generalizes this to arbitrary perturbation kernels and embedding spaces. In linear regimes, \cref{prop:linear_influence} recovers squared impulse responses. The key advance is that ECL is defined for discrete, non-differentiable inputs (DNA sequences) and uses distribution-aware perturbations rather than gradient computation.
+
+\subsection{Attribution methods as estimators of influence}
+
+Integrated gradients~\citep{Sundararajan2017IG} and DeepLIFT~\citep{Shrikumar2017DeepLIFT} estimate feature contributions under differentiability and baseline-choice assumptions. Perturbation influence energies are complementary: they require only forward evaluations, apply to discrete inputs, and can be distribution-aware. ISM and its accelerations~\citep{Nair2022fastISM,Schreiber2022Yuzu} are computationally aligned with our influence definitions. A key distinction is that ISM at a reference sequence gives a \emph{point estimate} of local sensitivity, while our framework averages over the data distribution $P_X$, providing a population-level quantity.
+
+\subsection{From RULER and NIAH to gNIAH}
+
+The RULER benchmark~\citep{Hsieh2024RULER} defines ECL operationally as the maximum context length maintaining performance above a threshold. Our perturbation-variance ECL is more general: it applies at the embedding level without requiring a downstream task, is a continuous rather than binary measure, and provides statistical uncertainty quantification. The gNIAH protocol (\cref{sec:gniah}) adapts the Needle-in-a-Haystack concept to genomics by inserting known regulatory motifs at varying distances, providing a complementary probing approach.
+
+\subsection{Representation comparison vs context utilization}
+
+CKA~\citep{Kornblith2019CKA} measures similarity of representations across models or layers. ECL instead measures \emph{where representations come from} in input space. Both are essential for interpreting sequence models: CKA tells us whether two models learn similar features; ECL tells us whether they use similar input ranges to construct those features.
+
+\subsection{Decision-theoretic ordering and information geometry}
+
+Blackwell dominance (\cref{sec:blackwell}) provides a canonical comparison of context experiments. This connects to information geometry: the Fisher information matrix of the context-limited embedding distribution characterizes the local informativeness of the context experiment. Models with higher Fisher information at a given radius extract more useful signal from that context range.
+
+\subsection{Connection to LongPPL and key-token identification}
+
+LongPPL~\citep{Fang2024LongPPL} identifies ``key tokens'' whose predictions improve with longer context, achieving strong correlation with downstream performance. In our framework, key positions are those with large influence energy: $\cI(i;r) \gg 0$. LongPPL's difference-based identification can be seen as a special case of our out-of-window ablation $\Delta_{\mathrm{out}}$ applied to next-token prediction loss.

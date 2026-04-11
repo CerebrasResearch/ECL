@@ -1,0 +1,33 @@
+% =============================================================================
+\section{Discussion}\label{sec:discussion}
+% =============================================================================
+
+\subsection{ECL as a model selection and design criterion}
+
+The ratio $\ECL_{0.9}/L_{\mathrm{nominal}}$ is a measure of architectural efficiency: a ratio near 1 indicates the model fully utilizes its context window, while a ratio near 0 indicates wasted capacity. Models with low utilization ratios may benefit from shorter input windows (reducing computational cost without performance loss) or architectural modifications to improve long-range information flow. Conversely, if ECL saturates at the nominal length, the model may benefit from a longer input window.
+
+\subsection{Implications for training}
+
+If $\ECL_{0.9} \ll L_{\mathrm{nominal}}$ at convergence, training with shorter sequences may be equally effective, yielding substantial compute savings (quadratic for transformers, linear for SSMs). Progressive context extension during training---starting with short sequences and gradually increasing---may be an efficient strategy if ECL grows during training (\cref{sec:extensions}). Curriculum learning schedules could be informed by ECL monitoring.
+
+\subsection{Biological interpretation}
+
+Comparing model ECL distributions to the known distribution of regulatory distances provides a principled assessment of whether a model captures biologically relevant long-range dependencies. The biological evidence indicates that $\sim$84\% of enhancer--promoter interactions fall within 100~kb and $\sim$99\% within 1~Mb. A model with ECL $<$ 20~kb captures only $\sim$47\% of the regulatory landscape; achieving ECL $\approx$ 100~kb captures $\sim$84\%. Models should aim for ECL at least matching the median enhancer--promoter distance ($\sim$30~kb) for competent regulatory genomics.
+
+\subsection{Limitations}
+
+\paragraph{Perturbation dependence.}
+ECL is not an intrinsic property of $f$ alone: it depends on $\Pi$ and $P_X$. We recommend reporting ECL under multiple perturbation types and defining a \emph{consensus ECL} as the median across perturbation types.
+
+\paragraph{Non-additivity.}
+Single-site influence energies can miss synergistic distal interactions. Block perturbations and interaction ECL (\cref{eq:interaction}) partially address this, but full characterization of high-order interactions is computationally prohibitive for long sequences.
+
+\paragraph{Embedding geometry.}
+Euclidean distances are not invariant to general reparameterizations. Whitening (\cref{sec:extensions}) helps but adds estimation complexity and may amplify noise in low-variance embedding dimensions.
+
+\paragraph{Computational cost.}
+Even with binned estimation, computing ECL requires hundreds of forward passes per locus. For models like Evo~2 (40B parameters, 1~Mb input), this is expensive. Surrogate-based approaches (\cref{alg:surrogate}) and hardware acceleration are essential for practical deployment.
+
+\subsection{Broader impacts}
+
+Accurate ECL measurement can improve variant effect prediction by identifying which variants fall within a model's effective context, reducing spurious long-range attributions. However, overconfident ECL estimates used in clinical genomics without proper uncertainty quantification could lead to misinterpretation of variant effects. ECL should always be reported with confidence intervals and robustness checks across perturbation types.

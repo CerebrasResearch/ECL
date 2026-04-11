@@ -1,0 +1,52 @@
+% =============================================================================
+\section{Problem Formulation and Assumptions}\label{sec:formulation}
+% =============================================================================
+
+We seek to formalize and estimate an \emph{effective context length} for an embedding-generating model $f$, relative to (i) a reference position $r$, (ii) a distribution of sequences $P_X$, (iii) a perturbation mechanism $\Pi$, and (iv) an embedding discrepancy $d_\cZ$. Formally, we estimate a functional
+\[
+\Psi(f, P_X, \Pi, d_\cZ, \beta) \;=\; \ECL_\beta(r).
+\]
+
+\subsection{Core question}
+
+Intuitively, ECL should be small if embeddings at $r$ depend mostly on nearby positions, and large if distal context materially affects embeddings. We pose the following estimation problem:
+
+\begin{quote}
+\emph{Given black-box access to $f$ and the ability to sample sequences $X\sim P_X$ and perturbations $X^{(S)}\sim \Pi_S(\cdot\mid X)$, estimate the minimal context radius $\ell$ such that perturbations outside $W_\ell(r)$ contribute at most a prescribed fraction of total embedding variability.}
+\end{quote}
+
+\subsection{Assumptions}
+
+We state explicit conditions under which our theoretical results hold. Many can be weakened; clarity is prioritized.
+
+\begin{assumption}[Measurability and finite second moment]\label{ass:meas}
+$f$ is measurable, $d_\cZ$ is measurable, and
+$\E\big[d_\cZ(f(X),f(X'))\big] < \infty$
+for $X,X'$ distributed as specified by the perturbation mechanism.
+\end{assumption}
+
+\begin{assumption}[Perturbation locality]\label{ass:local}
+For each set $S$, $\Pi_S(\cdot\mid x)$ modifies only coordinates in $S$: $X^{(S)}_{-S}=x_{-S}$ almost surely.
+\end{assumption}
+
+\begin{assumption}[Conditional local independence]\label{ass:condind}
+When needed for Sobol-type decompositions, we assume that conditioned on a local context window of size $k$ (e.g., $k=2$ for dinucleotide context), coordinates are approximately independent:
+\[
+P(X_i \mid X_{-i}) \approx P(X_i \mid X_{i-k:i+k}).
+\]
+This is biologically more realistic than full coordinate independence and is satisfied by $k$-th order Markov models for DNA.
+\end{assumption}
+
+\begin{assumption}[Sub-Gaussian influence variables]\label{ass:subgauss}
+For each position $i$, the random variable $U_i := d_\cZ(f(X), f(X^{(i)}))$ is sub-Gaussian with parameter $\sigma_U^2$:
+\[
+\E\big[e^{\lambda(U_i - \E[U_i])}\big] \;\le\; \exp\!\Big(\frac{\lambda^2 \sigma_U^2}{2}\Big), \qquad \forall\, \lambda \in \bbR.
+\]
+This is weaker than boundedness and holds when $f$ is Lipschitz and inputs are bounded.
+\end{assumption}
+
+\begin{assumption}[Lipschitz stability (optional)]\label{ass:lipschitz}
+There exists $K>0$ such that for all $x,x'\in\cX$,
+$\norm{f(x)-f(x')}_\cZ \le K \cdot \Ham(x,x')$,
+where $\Ham$ is Hamming distance.
+\end{assumption}

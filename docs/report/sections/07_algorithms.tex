@@ -1,0 +1,128 @@
+% =============================================================================
+\section{Algorithms and Constructions}\label{sec:algorithms}
+% =============================================================================
+
+\subsection{Monte Carlo estimator of influence energies and ECL}
+
+\begin{algorithm}[H]
+\caption{Monte Carlo estimator of influence energies and ECL}\label{alg:mc_ecl}
+\Input{Model $f$; reference locus $r$; sampler for $P_X$; perturbation kernels $\{\Pi_{\{i\}}\}$; discrepancy $d_\cZ$; samples $n$; target fraction $\beta$.}
+\Output{Estimated $\widehat{\cI}(i;r)$ for $i=1,\dots,L$; estimated $\widehat{\ECL}_\beta(r)$.}
+\BlankLine
+Initialize $\widehat{\cI}(i;r)\leftarrow 0$ for all $i$\;
+\For{$t\leftarrow 1$ \KwTo $n$}{
+  Sample $X^{(t)} \sim P_X$; compute $Z^{(t)} \leftarrow f(X^{(t)})$\;
+  \For{$i\leftarrow 1$ \KwTo $L$}{
+    Sample $\widetilde{X}^{(t,i)} \sim \Pi_{\{i\}}(\cdot\mid X^{(t)})$\;
+    Compute $\widetilde{Z}^{(t,i)} \leftarrow f(\widetilde{X}^{(t,i)})$\;
+    $\widehat{\cI}(i;r) \leftarrow \widehat{\cI}(i;r) + d_\cZ(Z^{(t)},\widetilde{Z}^{(t,i)})$\;
+  }
+}
+Normalize: $\widehat{\cI}(i;r)\leftarrow \widehat{\cI}(i;r)/n$ for all $i$\;
+$\widehat{\cI}_{\mathrm{tot}}(r)\leftarrow \sum_{i=1}^L \widehat{\cI}(i;r)$\;
+\For{$\ell\leftarrow 0$ \KwTo $L$}{
+  \If{$\sum_{i:|i-r|\le \ell}\widehat{\cI}(i;r) \ge \beta\, \widehat{\cI}_{\mathrm{tot}}(r)$}{
+    \KwRet{$\{\widehat{\cI}(i;r)\}_{i}$ and $\widehat{\ECL}_\beta(r)\leftarrow \ell$}\;
+  }
+}
+\KwRet{$\widehat{\ECL}_\beta(r)\leftarrow L$}\;
+\end{algorithm}
+
+\paragraph{Complexity.}
+\cref{alg:mc_ecl} requires $O(nL)$ forward evaluations, infeasible for $L \approx 500{,}000$. Practical implementations subsample positions, use distance-binned estimation, fast ISM~\citep{Nair2022fastISM}, or block perturbations.
+
+\subsection{Binned influence profile estimator}
+
+\begin{algorithm}[H]
+\caption{Binned influence profile estimator}\label{alg:binned}
+\Input{Model $f$; reference $r$; sampler for $P_X$; perturbation kernel $\Pi$; samples $n$; per-distance subsample size $m(d)$; max distance $D$.}
+\Output{$\widehat{\cI}(d;r)$ for $d=0,\dots,D$.}
+\BlankLine
+Initialize $\widehat{\cI}(d;r)\leftarrow 0$ for $d=0,\dots,D$\;
+\For{$t\leftarrow 1$ \KwTo $n$}{
+  Sample $X^{(t)}\sim P_X$; compute $Z^{(t)}\leftarrow f(X^{(t)})$\;
+  \For{$d\leftarrow 0$ \KwTo $D$}{
+    Sample $m(d)$ indices uniformly from $\{i:|i-r|=d\}$\;
+    \ForEach{sampled index $i$}{
+      Sample $\widetilde{X}\sim \Pi_{\{i\}}(\cdot\mid X^{(t)})$; compute $\widetilde{Z}\leftarrow f(\widetilde{X})$\;
+      $\widehat{\cI}(d;r)\leftarrow \widehat{\cI}(d;r) + d_\cZ(Z^{(t)},\widetilde{Z})$\;
+    }
+  }
+}
+Normalize: $\widehat{\cI}(d;r)\leftarrow \widehat{\cI}(d;r)/(n\,m(d))$ for each $d$\;
+\end{algorithm}
+
+\subsection{Bootstrap confidence intervals}
+
+\begin{algorithm}[H]
+\caption{Bootstrap confidence intervals for $\ECL_\beta(r)$}\label{alg:bootstrap}
+\Input{MC samples $\{(X^{(t)}, \widetilde{X}^{(t,i)})\}$ from \cref{alg:mc_ecl} or \ref{alg:binned}; bootstrap replicates $B$; target $\beta$; confidence level $1-\alpha$.}
+\Output{Percentile CI $[q_{\alpha/2},\, q_{1-\alpha/2}]$ for $\ECL_\beta(r)$.}
+\BlankLine
+\For{$b\leftarrow 1$ \KwTo $B$}{
+  Resample indices $t$ with replacement from $\{1,\dots,n\}$\;
+  Recompute $\widehat{\ECL}^{(b)}_\beta(r)$ from the resampled dataset\;
+}
+Compute empirical quantiles $q_{\alpha/2}$ and $q_{1-\alpha/2}$ of $\{\widehat{\ECL}^{(b)}_\beta(r)\}_{b=1}^B$\;
+\end{algorithm}
+
+\subsection{Multi-scale block ECL}
+
+\begin{algorithm}[H]
+\caption{Multi-scale block ECL}\label{alg:multiscale}
+\Input{Model $f$; reference $r$; block sizes $\cB = \{b_1,\dots,b_S\}$; samples $n$; $\beta$.}
+\Output{$\widehat{\ECL}_\beta^{(b)}(r)$ for each block size $b \in \cB$.}
+\BlankLine
+\For{each $b \in \cB$}{
+  Partition $\{1,\dots,L\}$ into blocks of size $b$\;
+  Estimate block influence $\widehat{\cI}(B_k;r)$ for each block via MC with $n$ samples\;
+  Assign block distance $d(B_k) := \min_{i \in B_k} |i-r|$\;
+  Compute cumulative influence and $\widehat{\ECL}_\beta^{(b)}(r)$ from block influences\;
+}
+\end{algorithm}
+
+\subsection{Comparative ECL test}
+
+\begin{algorithm}[H]
+\caption{Permutation test for ECL comparison}\label{alg:compare}
+\Input{Models $f,g$; shared loci $\{r_1,\dots,r_N\}$; samples $n$ per locus; $\beta$; permutations $P$.}
+\Output{Per-locus $\widehat{\ECL}_\beta^f(r_j) - \widehat{\ECL}_\beta^g(r_j)$; two-sided $p$-value.}
+\BlankLine
+\For{$j\leftarrow 1$ \KwTo $N$}{
+  Estimate $\widehat{\ECL}_\beta^f(r_j)$ and $\widehat{\ECL}_\beta^g(r_j)$ using \cref{alg:binned}\;
+  $D_j \leftarrow \widehat{\ECL}_\beta^f(r_j) - \widehat{\ECL}_\beta^g(r_j)$\;
+}
+$T_{\mathrm{obs}} \leftarrow \frac{1}{N}\sum_j D_j$\;
+\For{$p\leftarrow 1$ \KwTo $P$}{
+  Randomly flip signs of $\{D_j\}$ and compute $T^{(p)}$\;
+}
+$p\text{-value} \leftarrow \frac{1}{P}\sum_{p=1}^P \ind[|T^{(p)}| \ge |T_{\mathrm{obs}}|]$\;
+\end{algorithm}
+
+\subsection{Surrogate-accelerated ECL}
+
+\begin{algorithm}[H]
+\caption{Fast ECL via surrogate models}\label{alg:surrogate}
+\Input{Model $f$; reference $r$; coarse ISM data at $M$ sampled positions; surrogate class (linear/GAM).}
+\Output{Approximate $\widehat{\ECL}_\beta^{\mathrm{surr}}(r)$.}
+\BlankLine
+Collect coarse influence estimates $\{\widehat{\cI}(i_m;r)\}_{m=1}^M$ via ISM at sampled positions\;
+Fit surrogate $\hat{h}(d) \approx \cI(d;r)$ to the binned data (e.g., exponential mixture via NLS)\;
+Compute $\cI_{\le \ell}^{\mathrm{surr}}(r) = \sum_{d=0}^\ell 2\,\hat{h}(d)$ analytically\;
+$\widehat{\ECL}_\beta^{\mathrm{surr}}(r) \leftarrow \min\{\ell : \cI_{\le \ell}^{\mathrm{surr}}(r) \ge \beta \cdot \cI_{\mathrm{tot}}^{\mathrm{surr}}(r)\}$\;
+Report surrogate approximation error via cross-validation on held-out positions\;
+\end{algorithm}
+
+\subsection{Adaptive sampling ECL}
+
+\begin{algorithm}[H]
+\caption{Adaptive sampling ECL estimator}\label{alg:adaptive}
+\Input{Model $f$; reference $r$; initial coarse grid $\{d_1,\dots,d_G\}$; budget $n_{\mathrm{tot}}$; $\beta$.}
+\Output{Refined $\widehat{\ECL}_\beta(r)$ with budget allocated near threshold.}
+\BlankLine
+\textbf{Phase 1 (coarse):} Allocate $n_{\mathrm{tot}}/2$ samples uniformly across grid to get $\widehat{\cI}(d_g;r)$\;
+Identify approximate threshold crossing: $\hat{\ell}_0 \leftarrow$ coarse ECL estimate\;
+\textbf{Phase 2 (refinement):} Define refined grid around $\hat{\ell}_0 \pm \delta$\;
+Allocate remaining $n_{\mathrm{tot}}/2$ samples to the refined grid\;
+Recompute $\widehat{\ECL}_\beta(r)$ using combined estimates\;
+\end{algorithm}

@@ -1,0 +1,70 @@
+% =============================================================================
+\section{Complete Proofs}\label{app:proofs}
+% =============================================================================
+
+This appendix collects complete proofs for all theoretical results stated in the main text.
+
+\subsection{Proof of \texorpdfstring{\cref{prop:mono_beta}}{Proposition: Monotonicity}}
+
+\begin{proof}
+Let $0<\beta_1\le \beta_2\le 1$. Define $A(\beta) := \{\ell:\cI_{\le \ell}(r)\ge \beta\,\cI_{\mathrm{tot}}(r)\}$.
+Because $\beta_1\le \beta_2$, for any $\ell$, $\cI_{\le \ell}(r)\ge \beta_2 \cI_{\mathrm{tot}}(r)$ implies $\cI_{\le \ell}(r)\ge \beta_1 \cI_{\mathrm{tot}}(r)$. Hence $A(\beta_2)\subseteq A(\beta_1)$. Taking minima over nested sets: $\min A(\beta_1)\le \min A(\beta_2)$, i.e., $\ECL_{\beta_1}(r)\le \ECL_{\beta_2}(r)$.
+\end{proof}
+
+\subsection{Proof of \texorpdfstring{\cref{thm:exp_decay}}{Theorem: Exponential Decay Bound}}
+
+\begin{proof}
+Under the assumption $\cI(d;r) \le C e^{-\lambda d}$ with multiplicity $n_d \le 2$ for $d \ge 1$ and $n_0 = 1$:
+\[
+\cI_{\mathrm{tot}}(r) \le C + 2C \sum_{d=1}^{L} e^{-\lambda d} = C + \frac{2C e^{-\lambda}}{1-e^{-\lambda}} \le C + \frac{2C}{\lambda}
+\]
+using the geometric series bound $\sum_{d=1}^\infty e^{-\lambda d} = e^{-\lambda}/(1-e^{-\lambda}) \le 1/\lambda$ for $\lambda > 0$.
+
+The tail influence beyond radius $\ell$ is bounded by:
+\[
+\sum_{d=\ell+1}^{L} n_d \cI(d;r) \le 2C \sum_{d=\ell+1}^{\infty} e^{-\lambda d} = \frac{2C e^{-\lambda(\ell+1)}}{1-e^{-\lambda}} \le \frac{2C}{\lambda} e^{-\lambda \ell}.
+\]
+
+ECL$_\beta(r)$ is the smallest $\ell$ such that $\cI_{\le \ell}(r) \ge \beta \cI_{\mathrm{tot}}(r)$, equivalently such that $\cI_{>\ell}(r) \le (1-\beta)\cI_{\mathrm{tot}}(r)$. A sufficient condition is:
+\[
+\frac{2C}{\lambda} e^{-\lambda \ell} \le (1-\beta)\cI_{\mathrm{tot}}(r).
+\]
+Solving for $\ell$:
+\[
+\ell \ge \frac{1}{\lambda}\log\frac{2C}{\lambda(1-\beta)\cI_{\mathrm{tot}}(r)} = \frac{1}{\lambda}\log\frac{1}{1-\beta} + \frac{1}{\lambda}\log\frac{2C}{\lambda \cI_{\mathrm{tot}}(r)}.
+\]
+Since $\ECL_\beta(r)$ is the minimum integer $\ell$ satisfying this, adding 1 for the ceiling gives the stated bound.
+\end{proof}
+
+\subsection{Proof of \texorpdfstring{\cref{prop:ecl_not_blackwell}}{Proposition: ECL ordering does not imply Blackwell dominance}}
+
+\begin{proof}[Counterexample]
+Consider $L=3$, $r=2$, and two models $f,g:\{0,1\}^3 \to \bbR^2$. Define:
+\begin{align*}
+f(x) &= (x_1 + x_3,\; x_2), \\
+g(x) &= (x_2,\; x_1 \oplus x_3),
+\end{align*}
+where $\oplus$ denotes XOR. Under uniform $P_X$ and single-coordinate substitution perturbation:
+
+For $f$: $\cI(1;2) = \cI(3;2) = 1$, $\cI(2;2) = 1$, so $\ECL_{0.5}(f) = 0$, $\ECL_{1.0}(f) = 1$.
+
+For $g$: $\cI(1;2) = \cI(3;2) = 1$, $\cI(2;2) = 1$, so ECL profiles are identical.
+
+However, $f$ encodes $(x_1+x_3)$ while $g$ encodes $(x_1 \oplus x_3)$; neither is a function of the other, so neither Blackwell-dominates. More generally, for models with the same influence profile but different functional forms, ECL equality (or ordering) does not constrain the information-theoretic relationship.
+\end{proof}
+
+\subsection{Proof of \texorpdfstring{\cref{thm:minimax}}{Theorem: Minimax Rate}}
+
+\begin{proof}
+\textbf{Lower bound.} Consider two models in $\cF_M$: $f_0$ with constant influence $\cI(i;r) = c$ for all $i$, and $f_1$ with $\cI(i;r) = c + \epsilon$ for $|i-r| \le \ell_0$ and $\cI(i;r) = c - \epsilon'$ otherwise, where $\epsilon, \epsilon'$ are chosen so that $\ECL_\beta(f_0) = \ell_0$ and $\ECL_\beta(f_1) = \ell_0 + 1$ with margin $\gamma = \Theta(\epsilon)$. The KL divergence between the observation distributions is $O(n\epsilon^2/\sigma^2)$, and by Le Cam's method, any estimator has risk $\Omega(1)$ unless $n = \Omega(\sigma^2/\epsilon^2) = \Omega(M^2/\gamma^2)$. This gives the stated $\Omega(M^2/(\gamma^2 n))$ lower bound.
+
+\textbf{Upper bound.} By \cref{thm:ecl_stability}, $\widehat{\ECL}_\beta = \ECL_\beta$ when $\max_i |\widehat{\cI}(i;r) - \cI(i;r)| \le \gamma/(4L)$. By Hoeffding's inequality and a union bound, this holds with probability $\ge 1-\delta$ when $n \ge O(L^2 M^2 \gamma^{-2} \log(L/\delta))$, giving MSE $O(M^2/(\gamma^2 n))$ up to logarithmic factors.
+\end{proof}
+
+\subsection{Proof of \texorpdfstring{\cref{prop:composition}}{Proposition: Compositional Bound}}
+
+\begin{proof}
+Let $h:\cX \to \cH$ and $g:\cH \to \cZ$ with $f = g \circ h$. The output $f(x)_r = g(h(x))_r$ depends on intermediate positions $\{j : |j - r| \le R_g\}$ in $\cH$. Each intermediate position $j$ depends on input positions $\{i : |i - j| \le R_h\}$ in $\cX$. By triangle inequality, input position $i$ can influence output position $r$ only if there exists intermediate $j$ with $|j-r| \le R_g$ and $|i-j| \le R_h$, implying $|i-r| \le R_g + R_h$. For stacked architectures where each layer has receptive field $R$ and there are $D$ layers with stride $s$, the effective receptive field compounds multiplicatively: $R^\star \le R^D \cdot s^{D-1}$.
+
+For the dilated convolution case with kernel size $k$ and dilations $d_1, \dots, d_D$, the receptive field is additive: $R^\star = 1 + \sum_{l=1}^D (k-1) d_l$.
+\end{proof}
