@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Taxonomy of genomic sequence models.}
+\label{tab:model_taxonomy}
+\begin{tabular}{llcrr}
+\toprule
+Model & Architecture & Year & Nominal ctx (bp) & Parameters \\
+\midrule
+DeepSEA & CNN & 2015 & 1,000 & ~0.3M \\
+Basset & CNN & 2016 & 600 & ~2M \\
+Basenji & Dilated CNN & 2018 & 131,072 & ~4M \\
+Basenji2 & Dilated CNN & 2020 & 131,072 & ~4M \\
+Enformer & CNN+Transformer & 2021 & 196,608 & ~250M \\
+Borzoi & CNN+Transformer & 2025 & 524,288 & ~250M \\
+HyenaDNA & Hyena & 2023 & 1,000,000 & ~6.6M \\
+Caduceus & BiMamba & 2024 & 131,072 & ~8M \\
+Evo 2 & StripedHyena+Transf & 2025 & 1,000,000 & 40B \\
+DNABERT-2 & BERT+ALiBi & 2024 & 3,000 & 117M \\
+\bottomrule
+\end{tabular}
+\end{table}
