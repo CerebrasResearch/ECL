@@ -34,7 +34,14 @@ def generate_paired_ecl(
     model_a = SyntheticModel(seq_length=1000, embed_dim=64, decay_length=100.0)
     model_b = SyntheticModel(seq_length=1000, embed_dim=64, decay_length=180.0)
 
-    locus_classes = ["Promoter", "Prox. Enhancer", "Dist. Enhancer", "CTCF", "Intronic", "Intergenic"]
+    locus_classes = [
+        "Promoter",
+        "Prox. Enhancer",
+        "Dist. Enhancer",
+        "CTCF",
+        "Intronic",
+        "Intergenic",
+    ]
     class_decay_mods = {
         "Promoter": 0.3,
         "Prox. Enhancer": 0.8,
@@ -76,8 +83,7 @@ def generate_paired_ecl(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     rng = np.random.default_rng(2024)
     data = generate_paired_ecl(n_loci=500, rng=rng)
@@ -96,10 +102,15 @@ def main() -> None:
     ax = axes[0]
     sns.histplot(diff, kde=True, color="#4C72B0", alpha=0.5, bins=40, ax=ax, stat="density")
     ax.axvline(0, color="gray", linestyle="--", linewidth=1.0, alpha=0.7)
-    ax.axvline(mean_diff, color="#C44E52", linestyle="-", linewidth=2.0, label=f"Mean = {mean_diff:.1f}")
+    ax.axvline(
+        mean_diff, color="#C44E52", linestyle="-", linewidth=2.0, label=f"Mean = {mean_diff:.1f}"
+    )
     ax.axvspan(
-        mean_diff - ci_hw, mean_diff + ci_hw,
-        alpha=0.15, color="#C44E52", label=f"95% CI [{mean_diff - ci_hw:.1f}, {mean_diff + ci_hw:.1f}]",
+        mean_diff - ci_hw,
+        mean_diff + ci_hw,
+        alpha=0.15,
+        color="#C44E52",
+        label=f"95% CI [{mean_diff - ci_hw:.1f}, {mean_diff + ci_hw:.1f}]",
     )
     ax.set_xlabel(r"$\Delta$ECL$_{0.9}$ (Model A $-$ Model B)", fontsize=13)
     ax.set_ylabel("Density", fontsize=13)
@@ -112,7 +123,14 @@ def main() -> None:
 
     # --- Right panel: stratified by locus class ---
     ax2 = axes[1]
-    classes_unique = ["Promoter", "Prox. Enhancer", "Dist. Enhancer", "CTCF", "Intronic", "Intergenic"]
+    classes_unique = [
+        "Promoter",
+        "Prox. Enhancer",
+        "Dist. Enhancer",
+        "CTCF",
+        "Intronic",
+        "Intergenic",
+    ]
     class_colors = sns.color_palette("Set2", n_colors=len(classes_unique))
 
     class_means = []
@@ -126,8 +144,16 @@ def main() -> None:
         class_cis.append(se)
 
     y_pos = np.arange(len(classes_unique))
-    ax2.barh(y_pos, class_means, xerr=class_cis, color=class_colors, edgecolor="gray",
-             linewidth=0.5, height=0.6, capsize=3)
+    ax2.barh(
+        y_pos,
+        class_means,
+        xerr=class_cis,
+        color=class_colors,
+        edgecolor="gray",
+        linewidth=0.5,
+        height=0.6,
+        capsize=3,
+    )
     ax2.axvline(0, color="gray", linestyle="--", linewidth=1.0, alpha=0.7)
     ax2.set_yticks(y_pos)
     ax2.set_yticklabels(classes_unique, fontsize=10)
@@ -149,7 +175,9 @@ def main() -> None:
 
     print(f"Figure 9 saved to {output_dir / 'fig09_model_comparison_paired.pdf'}")
     print(f"Figure 9 saved to {output_dir / 'fig09_model_comparison_paired.png'}")
-    print(f"  Permutation test: mean diff = {mean_diff:.2f}, p = {p_value:.4f}, 95% CI half-width = {ci_hw:.2f}")
+    print(
+        f"  Permutation test: mean diff = {mean_diff:.2f}, p = {p_value:.4f}, 95% CI half-width = {ci_hw:.2f}"
+    )
 
 
 if __name__ == "__main__":

@@ -82,15 +82,14 @@ def synthetic_influence_profile(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     rng = np.random.default_rng(2024)
     sns.set_theme(style="whitegrid", font_scale=1.05)
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5), sharey=False)
 
-    for ax, (locus_name, locus_info) in zip(axes, LOCI.items()):
+    for ax, (locus_name, locus_info) in zip(axes, LOCI.items(), strict=False):
         enhancer_kb = locus_info["enhancer_distance_kb"]
 
         for cfg in MODEL_CONFIGS:
@@ -105,7 +104,8 @@ def main() -> None:
             infl_norm = infl / infl.max()
 
             ax.plot(
-                dist_kb, infl_norm,
+                dist_kb,
+                infl_norm,
                 color=cfg["color"],
                 linestyle=cfg["ls"],
                 linewidth=1.8,
@@ -115,7 +115,11 @@ def main() -> None:
 
         # Mark enhancer position
         ax.axvline(
-            enhancer_kb, color="#C44E52", linestyle=":", linewidth=2.0, alpha=0.8,
+            enhancer_kb,
+            color="#C44E52",
+            linestyle=":",
+            linewidth=2.0,
+            alpha=0.8,
         )
         ax.annotate(
             f"Enhancer\n({enhancer_kb} kb)",
@@ -128,8 +132,7 @@ def main() -> None:
         )
 
         # Mark TSS
-        ax.annotate("TSS", xy=(0, 1.0), fontsize=9, fontweight="bold",
-                     xytext=(50, 1.02), ha="left")
+        ax.annotate("TSS", xy=(0, 1.0), fontsize=9, fontweight="bold", xytext=(50, 1.02), ha="left")
 
         ax.set_xlabel("Distance from TSS (kb)", fontsize=12)
         ax.set_ylabel("Normalised Influence", fontsize=12)
@@ -140,13 +143,20 @@ def main() -> None:
     # Single legend for all panels
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(
-        handles, labels, loc="lower center", ncol=3,
-        fontsize=10, frameon=True, bbox_to_anchor=(0.5, -0.05),
+        handles,
+        labels,
+        loc="lower center",
+        ncol=3,
+        fontsize=10,
+        frameon=True,
+        bbox_to_anchor=(0.5, -0.05),
     )
 
     fig.suptitle(
         "Figure 10: Influence Profiles at Known Long-Range Regulatory Loci",
-        fontsize=14, fontweight="bold", y=1.02,
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
     )
     fig.tight_layout()
 

@@ -1,0 +1,7 @@
+Model,Nominal (bp),ECL_0.9 (bp),Utilization (%)
+Enformer,196608,881,0.45
+Borzoi,524288,884,0.17
+HyenaDNA,1000000,877,0.09
+Caduceus,131072,866,0.66
+Evo 2,1000000,885,0.09
+DNABERT-2,3000,830,27.67

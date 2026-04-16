@@ -37,18 +37,19 @@ MOTIF_NAMES = ["CTCF", "GATA", "SP1"]
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     rng = np.random.default_rng(2024)
 
     # Distance grid (in bp, log-spaced for wide coverage)
     distances = np.unique(
-        np.concatenate([
-            np.arange(1, 50, 5),
-            np.arange(50, 200, 20),
-            np.arange(200, SEQ_LENGTH // 2, 100),
-        ])
+        np.concatenate(
+            [
+                np.arange(1, 50, 5),
+                np.arange(50, 200, 20),
+                np.arange(200, SEQ_LENGTH // 2, 100),
+            ]
+        )
     ).astype(int)
 
     # Colours and line styles for models
@@ -81,10 +82,7 @@ def main() -> None:
 
             # Normalise to peak sensitivity for visual comparison
             peak = sensitivity.max()
-            if peak > 0:
-                sensitivity_norm = sensitivity / peak
-            else:
-                sensitivity_norm = sensitivity
+            sensitivity_norm = sensitivity / peak if peak > 0 else sensitivity
 
             ax.plot(
                 distances,
@@ -104,10 +102,16 @@ def main() -> None:
         # Mark the motif consensus on the panel
         motif_seq = MOTIFS[motif_name]
         ax.text(
-            0.97, 0.95, f"Motif: {motif_seq}",
-            transform=ax.transAxes, fontsize=8,
-            ha="right", va="top",
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", edgecolor="gray", alpha=0.8),
+            0.97,
+            0.95,
+            f"Motif: {motif_seq}",
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            va="top",
+            bbox=dict(
+                boxstyle="round,pad=0.3", facecolor="lightyellow", edgecolor="gray", alpha=0.8
+            ),
         )
 
         ax.set_xlim(0, distances.max() * 1.02)
@@ -116,13 +120,20 @@ def main() -> None:
     # Shared legend
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(
-        handles, labels, loc="lower center", ncol=3,
-        fontsize=10, frameon=True, bbox_to_anchor=(0.5, -0.06),
+        handles,
+        labels,
+        loc="lower center",
+        ncol=3,
+        fontsize=10,
+        frameon=True,
+        bbox_to_anchor=(0.5, -0.06),
     )
 
     fig.suptitle(
         "Figure 12: gNIAH Sensitivity vs Distance for Regulatory Motifs",
-        fontsize=14, fontweight="bold", y=1.02,
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
     )
     fig.tight_layout()
 

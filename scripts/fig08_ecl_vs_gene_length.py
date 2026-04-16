@@ -65,8 +65,7 @@ def generate_synthetic_gene_data(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     rng = np.random.default_rng(2024)
     data = generate_synthetic_gene_data(n_genes=500, rng=rng)

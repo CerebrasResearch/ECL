@@ -89,8 +89,7 @@ def fast_ecl_at_locus(model_fn, sequences, reference, max_distance, perturbation
 
 def main():
     rng = np.random.default_rng(SEED)
-    output_dir = Path(__file__).resolve().parent.parent / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     reference = SEQ_LENGTH // 2
 
@@ -139,8 +138,7 @@ def main():
 
     # Diagonal reference line
     max_ecl = MAX_DISTANCE
-    ax.plot([0, max_ecl], [0, max_ecl], "k--", linewidth=0.8, alpha=0.5,
-            label="y = x (equal ECL)")
+    ax.plot([0, max_ecl], [0, max_ecl], "k--", linewidth=0.8, alpha=0.5, label="y = x (equal ECL)")
 
     for idx, (model_name, data) in enumerate(scatter_data.items()):
         ecl_sub = np.array(data["substitution"])

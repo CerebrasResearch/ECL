@@ -18,11 +18,11 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from ecl.cds import fit_cds, select_n_components
-from ecl.ecl import ECL, directional_ecl
-from ecl.estimation import bootstrap_ecl_ci, permutation_test
+from ecl.ecl import ECL
+from ecl.estimation import permutation_test
 from ecl.influence import compute_influence_profile
 from ecl.models.base import SyntheticModel
-from ecl.perturbations import DinucleotideShuffle, RandomSubstitution
+from ecl.perturbations import RandomSubstitution
 
 # ---------------------------------------------------------------------------
 # Step 1: Create models with different context utilization profiles
@@ -89,14 +89,26 @@ for j in range(N_LOCI):
     seqs = rng.integers(0, 4, size=(N_SEQS, SEQ_LEN)).astype(np.int8)
 
     _, infl_a = compute_influence_profile(
-        model_a, seqs, ref, max_distance=200, positions_per_distance=2,
-        perturbation=perturbation, rng=rng, show_progress=False,
+        model_a,
+        seqs,
+        ref,
+        max_distance=200,
+        positions_per_distance=2,
+        perturbation=perturbation,
+        rng=rng,
+        show_progress=False,
     )
     ecl_a_loci[j] = ECL(profiles["CNN (short context)"][0], infl_a, beta=0.9)
 
     _, infl_b = compute_influence_profile(
-        model_b, seqs, ref, max_distance=200, positions_per_distance=2,
-        perturbation=perturbation, rng=rng, show_progress=False,
+        model_b,
+        seqs,
+        ref,
+        max_distance=200,
+        positions_per_distance=2,
+        perturbation=perturbation,
+        rng=rng,
+        show_progress=False,
     )
     ecl_b_loci[j] = ECL(profiles["Transformer (medium)"][0], infl_b, beta=0.9)
 
@@ -118,9 +130,11 @@ for name in models:
     best = results[best_K - 1]
     print(f"\n  {name}: best K={best_K}")
     for k in range(best_K):
-        print(f"    Component {k+1}: a={best['amplitudes'][k]:.3f}, "
-              f"lambda={best['decay_rates'][k]:.4f} "
-              f"(half-life={0.693/best['decay_rates'][k]:.0f} bp)")
+        print(
+            f"    Component {k+1}: a={best['amplitudes'][k]:.3f}, "
+            f"lambda={best['decay_rates'][k]:.4f} "
+            f"(half-life={0.693/best['decay_rates'][k]:.0f} bp)"
+        )
 
 # ---------------------------------------------------------------------------
 # Step 5: Visualization
@@ -128,8 +142,11 @@ for name in models:
 print("\nStep 5: Generating comparison plots...")
 
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-colors = {"CNN (short context)": "#e41a1c", "Transformer (medium)": "#377eb8",
-          "SSM (long context)": "#4daf4a"}
+colors = {
+    "CNN (short context)": "#e41a1c",
+    "Transformer (medium)": "#377eb8",
+    "SSM (long context)": "#4daf4a",
+}
 
 # Panel A: Influence profiles (log scale)
 ax = axes[0, 0]
@@ -147,6 +164,7 @@ ax = axes[0, 1]
 for name in models:
     d, infl = profiles[name]
     from ecl.ecl import cumulative_influence as cum_infl
+
     _, cumul = cum_infl(d, infl)
     total = cumul[-1]
     if total > 0:

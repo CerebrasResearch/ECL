@@ -46,8 +46,7 @@ BETA_THRESHOLDS = [0.5, 0.8, 0.9, 0.95, 0.99]
 SEED = 42
 
 
-def compute_per_sample_influence(model_fn, sequences, reference, max_distance,
-                                  perturbation, rng):
+def compute_per_sample_influence(model_fn, sequences, reference, max_distance, perturbation, rng):
     """Compute per-sample influence values for bootstrap.
 
     Returns influence_samples of shape (n, D+1) and distances of shape (D+1,).
@@ -83,8 +82,7 @@ def compute_per_sample_influence(model_fn, sequences, reference, max_distance,
 
 def main():
     rng = np.random.default_rng(SEED)
-    output_dir = Path(__file__).resolve().parent.parent / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     reference = SEQ_LENGTH // 2
     perturbation = RandomSubstitution()
@@ -126,10 +124,7 @@ def main():
         # Cumulative influence fraction
         radii, cumul = cumulative_influence(distances, mean_influence)
         total = cumul[-1]
-        if total > 0:
-            fraction = cumul / total
-        else:
-            fraction = np.zeros_like(cumul)
+        fraction = cumul / total if total > 0 else np.zeros_like(cumul)
 
         ax.plot(radii, fraction, color=color, linewidth=2.0, label=model_name)
 
@@ -145,8 +140,7 @@ def main():
         ecl_results[model_name] = (ecl_point, ci_lo, ci_hi, color)
 
     # Horizontal threshold lines
-    beta_colors = {0.5: "#aaaaaa", 0.8: "#888888", 0.9: "#555555",
-                   0.95: "#333333", 0.99: "#111111"}
+    beta_colors = {0.5: "#aaaaaa", 0.8: "#888888", 0.9: "#555555", 0.95: "#333333", 0.99: "#111111"}
     for beta in BETA_THRESHOLDS:
         ax.axhline(
             y=beta,
@@ -166,7 +160,7 @@ def main():
         )
 
     # Vertical ECL lines with bootstrap CI error bars
-    for idx, (model_name, (ecl_pt, ci_lo, ci_hi, color)) in enumerate(ecl_results.items()):
+    for ecl_pt, ci_lo, ci_hi, color in ecl_results.values():
         ax.axvline(x=ecl_pt, color=color, linestyle=":", linewidth=1.0, alpha=0.5)
         ax.errorbar(
             ecl_pt,

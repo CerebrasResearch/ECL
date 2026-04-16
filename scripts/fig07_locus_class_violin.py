@@ -59,8 +59,7 @@ def generate_ecl_per_class(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     rng = np.random.default_rng(2024)
 

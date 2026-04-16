@@ -18,7 +18,7 @@ from ecl.models.base import SyntheticModel
 
 # Known long-range regulatory interactions
 KNOWN_LOCI = [
-    ("SHH/ZRS", 1000),        # kb
+    ("SHH/ZRS", 1000),  # kb
     ("MYC enhancer", 1700),
     ("SOX9 desert", 1000),
     ("HBB/LCR", 60),
@@ -26,11 +26,11 @@ KNOWN_LOCI = [
     ("SHH/MACS1", 900),
 ]
 
-# Models to evaluate (name, decay_length for simulation, seq_length)
+# Paper's 3 models for biological validation (Section 11.9): Enformer, Borzoi, Evo 2
 MODEL_LIST = [
     ("Enformer", 500.0, 2000),
     ("Borzoi", 600.0, 2000),
-    ("HyenaDNA", 400.0, 2000),
+    ("Evo 2", 700.0, 2000),
 ]
 
 N_SAMPLES = 20
@@ -79,8 +79,7 @@ def _compute_ecl_09(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     rng = np.random.default_rng(42)
 
@@ -136,12 +135,8 @@ def main() -> None:
     # Multi-row header
     model_header_parts = []
     for mn in model_names:
-        model_header_parts.append(
-            r"\multicolumn{2}{c}{" + mn + r"}"
-        )
-    lines.append(
-        r"Locus & Known (kb) & " + " & ".join(model_header_parts) + r" \\"
-    )
+        model_header_parts.append(r"\multicolumn{2}{c}{" + mn + r"}")
+    lines.append(r"Locus & Known (kb) & " + " & ".join(model_header_parts) + r" \\")
     sub_header = r" & "
     sub_parts = []
     for _ in model_names:

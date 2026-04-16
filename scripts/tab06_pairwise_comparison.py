@@ -17,10 +17,10 @@ from ecl.ecl import ECL
 from ecl.estimation import permutation_test
 from ecl.models.base import SyntheticModel
 
+# Paper's 4 models for pairwise comparison (Section 11.8)
 MODEL_CONFIGS = {
-    "DeepSEA": {"seq_length": 1000, "decay_length": 80.0},
-    "Basenji": {"seq_length": 2000, "decay_length": 300.0},
     "Enformer": {"seq_length": 2000, "decay_length": 500.0},
+    "Borzoi": {"seq_length": 2000, "decay_length": 600.0},
     "HyenaDNA": {"seq_length": 2000, "decay_length": 400.0},
     "Caduceus": {"seq_length": 2000, "decay_length": 250.0},
 }
@@ -66,8 +66,7 @@ def _compute_ecl_per_locus(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     rng = np.random.default_rng(42)
 

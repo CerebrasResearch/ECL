@@ -150,7 +150,7 @@ def _dinucleotide_shuffle_array(seq: npt.NDArray, rng: np.random.Generator) -> n
     out = np.array(result, dtype=seq.dtype)
     # Pad if path was short (edge case)
     if len(out) < n:
-        out = np.concatenate([out, seq[len(out):]])
+        out = np.concatenate([out, seq[len(out) :]])
     return out
 
 

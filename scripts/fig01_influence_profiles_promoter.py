@@ -60,8 +60,9 @@ def generate_promoter_sequences(n_loci, n_seq, seq_length, rng):
     return sequences
 
 
-def compute_profiles_with_se(model_fn, sequences_all_loci, reference, max_distance,
-                              perturbation, rng):
+def compute_profiles_with_se(
+    model_fn, sequences_all_loci, reference, max_distance, perturbation, rng
+):
     """Compute mean influence profile and SE across loci."""
     n_loci = sequences_all_loci.shape[0]
     all_profiles = []
@@ -88,8 +89,7 @@ def compute_profiles_with_se(model_fn, sequences_all_loci, reference, max_distan
 
 def main():
     rng = np.random.default_rng(SEED)
-    output_dir = Path(__file__).resolve().parent.parent / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     # Generate promoter-centered loci
     sequences = generate_promoter_sequences(N_LOCI, N_SEQUENCES, SEQ_LENGTH, rng)

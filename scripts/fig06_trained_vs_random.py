@@ -82,8 +82,9 @@ class RandomWeightModel:
         return self._embed_dim
 
 
-def compute_profiles_with_se(model_fn, sequences_all_loci, reference, max_distance,
-                              perturbation, rng):
+def compute_profiles_with_se(
+    model_fn, sequences_all_loci, reference, max_distance, perturbation, rng
+):
     """Compute mean influence profile and SE across loci."""
     n_loci = sequences_all_loci.shape[0]
     all_profiles = []
@@ -110,16 +111,13 @@ def compute_profiles_with_se(model_fn, sequences_all_loci, reference, max_distan
 
 def main():
     rng = np.random.default_rng(SEED)
-    output_dir = Path(__file__).resolve().parent.parent / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     reference = SEQ_LENGTH // 2
     perturbation = RandomSubstitution()
 
     # Generate loci
-    sequences = rng.integers(
-        0, 4, size=(N_LOCI, N_SEQUENCES, SEQ_LENGTH), dtype=np.int8
-    )
+    sequences = rng.integers(0, 4, size=(N_LOCI, N_SEQUENCES, SEQ_LENGTH), dtype=np.int8)
 
     # Models to compare
     model_configs = {
@@ -188,7 +186,8 @@ def main():
         se = res["se"][1:]
 
         ax1.semilogy(
-            d, mean,
+            d,
+            mean,
             color=res["color"],
             linestyle=res["linestyle"],
             linewidth=2.0,
@@ -216,20 +215,19 @@ def main():
         fraction = cumul / total if total > 0 else np.zeros_like(cumul)
 
         ax2.plot(
-            radii, fraction,
+            radii,
+            fraction,
             color=res["color"],
             linestyle=res["linestyle"],
             linewidth=2.0,
             label=f"{name}",
         )
         # Mark ECL
-        ax2.axvline(x=res["ecl"], color=res["color"], linestyle=":",
-                     linewidth=1.0, alpha=0.6)
+        ax2.axvline(x=res["ecl"], color=res["color"], linestyle=":", linewidth=1.0, alpha=0.6)
 
     # Beta threshold
     ax2.axhline(y=0.9, color="gray", linestyle="--", linewidth=0.8, alpha=0.6)
-    ax2.text(MAX_DISTANCE * 0.98, 0.91, r"$\beta=0.9$", ha="right", fontsize=9,
-             color="gray")
+    ax2.text(MAX_DISTANCE * 0.98, 0.91, r"$\beta=0.9$", ha="right", fontsize=9, color="gray")
 
     ax2.set_xlabel("Radius l (bp)", fontsize=12)
     ax2.set_ylabel(r"$I_{\leq l}(r) \;/\; I_{\mathrm{tot}}(r)$", fontsize=12)

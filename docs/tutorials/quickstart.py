@@ -35,9 +35,9 @@ print("Step 1: Creating synthetic model...")
 # The SyntheticModel has exponentially decaying influence from a reference position.
 # decay_length controls how far influence extends.
 model = SyntheticModel(
-    seq_length=500,      # 500 bp sequence
-    embed_dim=64,        # 64-dimensional embedding
-    decay_length=50.0,   # Influence decays over ~50 bp
+    seq_length=500,  # 500 bp sequence
+    embed_dim=64,  # 64-dimensional embedding
+    decay_length=50.0,  # Influence decays over ~50 bp
 )
 
 print(f"  Nominal context: {model.nominal_context} bp")

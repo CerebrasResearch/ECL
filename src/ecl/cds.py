@@ -88,9 +88,7 @@ def _fit_nls(d: npt.NDArray, y: npt.NDArray, K: int) -> dict:
         bounds_hi.extend([np.inf, 100.0])
 
     try:
-        popt, _ = curve_fit(
-            _mixture_exp, d, y, p0=p0, bounds=(bounds_lo, bounds_hi), maxfev=10000
-        )
+        popt, _ = curve_fit(_mixture_exp, d, y, p0=p0, bounds=(bounds_lo, bounds_hi), maxfev=10000)
     except RuntimeError:
         return _fallback_result(d, y, K)
 

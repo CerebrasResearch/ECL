@@ -1,6 +1,7 @@
 """Table 2: ECL_beta estimates (bp) with 95% bootstrap CIs across models and locus classes.
 
-Uses SyntheticModel with different decay lengths per "model" and
+Paper Section 11.2: 6 models × 3 locus classes (Promoter, Enhancer, Intronic),
+beta in {0.5, 0.8, 0.9, 0.95, 0.99}. Uses SyntheticModel surrogates with
 ecl.estimation.bootstrap_ecl_ci for confidence intervals.
 """
 
@@ -16,15 +17,21 @@ import numpy as np
 from ecl.estimation import bootstrap_ecl_ci
 from ecl.models.base import SyntheticModel
 
-# Simulated models with characteristic decay lengths (bp)
+# Paper's 6 models with synthetic decay_length surrogates (bp)
 MODEL_CONFIGS = {
-    "DeepSEA": {"seq_length": 1000, "decay_length": 80.0},
-    "Basset": {"seq_length": 600, "decay_length": 50.0},
-    "Basenji": {"seq_length": 2000, "decay_length": 300.0},
     "Enformer": {"seq_length": 2000, "decay_length": 500.0},
+    "Borzoi": {"seq_length": 2000, "decay_length": 600.0},
     "HyenaDNA": {"seq_length": 2000, "decay_length": 400.0},
     "Caduceus": {"seq_length": 2000, "decay_length": 250.0},
+    "Evo 2": {"seq_length": 2000, "decay_length": 700.0},
     "DNABERT-2": {"seq_length": 1000, "decay_length": 120.0},
+}
+
+# Locus classes with decay modifiers (simulates different regulatory contexts)
+LOCUS_CLASSES = {
+    "Promoter": 1.0,
+    "Enhancer": 1.15,
+    "Intronic": 0.7,
 }
 
 BETAS = [0.5, 0.8, 0.9, 0.95, 0.99]
@@ -43,10 +50,7 @@ def _generate_influence_samples(
     ref = L // 2
     max_dist = min(L // 2, 500)
 
-    # Generate random sequences
     sequences = rng.integers(0, 4, size=(n_samples, L))
-
-    # Collect per-sample influence values at each distance
     distances = np.arange(max_dist + 1)
     samples = np.zeros((n_samples, max_dist + 1))
 
@@ -74,47 +78,52 @@ def _generate_influence_samples(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     rng = np.random.default_rng(42)
 
-    # Collect results: model -> beta -> (point, ci_lo, ci_hi)
+    # Collect results: (model, locus_class) -> beta -> (point, ci_lo, ci_hi)
     results = {}
+    row_keys = []
     for model_name, cfg in MODEL_CONFIGS.items():
-        model = SyntheticModel(
-            seq_length=cfg["seq_length"],
-            embed_dim=32,
-            decay_length=cfg["decay_length"],
-            noise_std=0.001,
-        )
-        distances, influence_samples = _generate_influence_samples(model, N_SAMPLES, rng)
-
-        results[model_name] = {}
-        for beta in BETAS:
-            point, ci_lo, ci_hi = bootstrap_ecl_ci(
-                influence_samples,
-                distances,
-                beta=beta,
-                n_bootstrap=N_BOOTSTRAP,
-                alpha=0.05,
-                rng=rng,
+        for locus_class, modifier in LOCUS_CLASSES.items():
+            key = (model_name, locus_class)
+            row_keys.append(key)
+            model = SyntheticModel(
+                seq_length=cfg["seq_length"],
+                embed_dim=32,
+                decay_length=cfg["decay_length"] * modifier,
+                noise_std=0.001,
             )
-            results[model_name][beta] = (point, ci_lo, ci_hi)
+            print(f"  Computing: {model_name} / {locus_class}...")
+            distances, influence_samples = _generate_influence_samples(model, N_SAMPLES, rng)
+
+            results[key] = {}
+            for beta in BETAS:
+                point, ci_lo, ci_hi = bootstrap_ecl_ci(
+                    influence_samples,
+                    distances,
+                    beta=beta,
+                    n_bootstrap=N_BOOTSTRAP,
+                    alpha=0.05,
+                    rng=rng,
+                )
+                results[key][beta] = (point, ci_lo, ci_hi)
 
     # --- CSV ---
     csv_path = output_dir / "tab02_ecl_estimates.csv"
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
-        header = ["Model"] + [f"ECL_{b}" for b in BETAS] + [f"CI_{b}" for b in BETAS]
+        header = ["Model", "Locus class"] + [f"ECL_{b}" for b in BETAS] + [f"CI_{b}" for b in BETAS]
         writer.writerow(header)
-        for model_name in MODEL_CONFIGS:
-            row = [model_name]
+        for model_name, locus_class in row_keys:
+            key = (model_name, locus_class)
+            row = [model_name, locus_class]
             for beta in BETAS:
-                pt, _, _ = results[model_name][beta]
+                pt, _, _ = results[key][beta]
                 row.append(f"{pt:.0f}")
             for beta in BETAS:
-                _, lo, hi = results[model_name][beta]
+                _, lo, hi = results[key][beta]
                 row.append(f"[{lo:.0f}, {hi:.0f}]")
             writer.writerow(row)
 
@@ -123,19 +132,26 @@ def main() -> None:
     lines = []
     lines.append(r"\begin{table}[t]")
     lines.append(r"\centering")
-    lines.append(r"\caption{$\mathrm{ECL}_\beta$ estimates (bp) with 95\% bootstrap CIs across models.}")
+    lines.append(
+        r"\caption{$\mathrm{ECL}_\beta$ estimates (bp) with 95\% bootstrap CIs across models and locus classes.}"
+    )
     lines.append(r"\label{tab:ecl_estimates}")
-    lines.append(r"\begin{tabular}{l" + beta_cols + r"}")
+    lines.append(r"\begin{tabular}{ll" + beta_cols + r"}")
     lines.append(r"\toprule")
     beta_header = " & ".join([f"$\\beta={b}$" for b in BETAS])
-    lines.append(r"Model & " + beta_header + r" \\")
+    lines.append(r"\textbf{Model} & \textbf{Locus class} & " + beta_header + r" \\")
     lines.append(r"\midrule")
-    for model_name in MODEL_CONFIGS:
-        cells = [model_name]
+    prev_model = None
+    for model_name, locus_class in row_keys:
+        key = (model_name, locus_class)
+        if prev_model is not None and model_name != prev_model:
+            lines.append(r"\midrule")
+        cells = [model_name, locus_class]
         for beta in BETAS:
-            pt, lo, hi = results[model_name][beta]
+            pt, lo, hi = results[key][beta]
             cells.append(f"{pt:.0f} [{lo:.0f}, {hi:.0f}]")
         lines.append(" & ".join(cells) + r" \\")
+        prev_model = model_name
     lines.append(r"\bottomrule")
     lines.append(r"\end{tabular}")
     lines.append(r"\end{table}")
@@ -145,18 +161,19 @@ def main() -> None:
     tex_path.write_text(tex)
 
     # --- stdout ---
-    print("=" * 100)
+    print("=" * 120)
     print("Table 2: ECL_beta estimates (bp) with 95% bootstrap CIs")
-    print("=" * 100)
-    hdr = f"{'Model':<12}"
+    print("=" * 120)
+    hdr = f"{'Model':<12} {'Locus':<10}"
     for beta in BETAS:
         hdr += f" {'ECL_' + str(beta):>20}"
     print(hdr)
-    print("-" * 100)
-    for model_name in MODEL_CONFIGS:
-        row = f"{model_name:<12}"
+    print("-" * 120)
+    for model_name, locus_class in row_keys:
+        key = (model_name, locus_class)
+        row = f"{model_name:<12} {locus_class:<10}"
         for beta in BETAS:
-            pt, lo, hi = results[model_name][beta]
+            pt, lo, hi = results[key][beta]
             row += f" {pt:>5.0f} [{lo:>4.0f},{hi:>4.0f}]"
         print(row)
     print()

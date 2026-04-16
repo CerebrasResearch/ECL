@@ -1,0 +1,7 @@
+Locus,Known dist (kb),ECL_Enformer (kb),Detected_Enformer,ECL_Borzoi (kb),Detected_Borzoi,ECL_Evo 2 (kb),Detected_Evo 2
+SHH/ZRS,1000,0.88,No,0.88,No,0.89,No
+MYC enhancer,1700,0.88,No,0.88,No,0.89,No
+SOX9 desert,1000,0.88,No,0.88,No,0.89,No
+HBB/LCR,60,0.88,No,0.88,No,0.89,No
+PAX6/ELP4,150,0.88,No,0.88,No,0.89,No
+SHH/MACS1,900,0.88,No,0.88,No,0.89,No

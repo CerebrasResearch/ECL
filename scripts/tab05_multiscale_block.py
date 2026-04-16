@@ -48,8 +48,7 @@ def _compute_block_ecl(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     rng = np.random.default_rng(42)
 
@@ -88,8 +87,7 @@ def main() -> None:
     lines.append(r"\begin{table}[t]")
     lines.append(r"\centering")
     lines.append(
-        r"\caption{Multi-scale block $\mathrm{ECL}$ for Borzoi at promoter loci. "
-        r"Values in bp.}"
+        r"\caption{Multi-scale block $\mathrm{ECL}$ for Borzoi at promoter loci. " r"Values in bp.}"
     )
     lines.append(r"\label{tab:multiscale_block}")
     lines.append(r"\begin{tabular}{l" + "r" * n_bs + r"}")

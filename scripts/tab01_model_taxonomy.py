@@ -59,8 +59,7 @@ def generate_latex(output_path: Path) -> str:
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     generate_csv(output_dir / "tab01_model_taxonomy.csv")
     tex = generate_latex(output_dir / "tab01_model_taxonomy.tex")

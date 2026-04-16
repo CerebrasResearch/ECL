@@ -52,8 +52,8 @@ class SyntheticInteractionModel(SyntheticModel):
         # Default blocks: three synergistic regions
         if interaction_blocks is None:
             self._interaction_blocks = [
-                (30, 60),    # block 1
-                (80, 110),   # block 2
+                (30, 60),  # block 1
+                (80, 110),  # block 2
                 (140, 170),  # block 3
             ]
         else:
@@ -78,9 +78,7 @@ class SyntheticInteractionModel(SyntheticModel):
             for i in range(bstart, bend - 1, max(1, n_block // 10)):
                 for j in range(i + 1, bend, max(1, n_block // 10)):
                     embedding += (
-                        self._interaction_proj[seq[i], seq[j]]
-                        * self._weights[i]
-                        * self._weights[j]
+                        self._interaction_proj[seq[i], seq[j]] * self._weights[i] * self._weights[j]
                     )
                     pair_count += 1
                     if pair_count >= max_pairs:
@@ -135,8 +133,7 @@ def compute_synthetic_interaction_matrix(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     rng = np.random.default_rng(2024)
 
@@ -185,15 +182,20 @@ def main() -> None:
     # Mark interaction blocks on the axes
     block_ranges = [(30, 60), (80, 110), (140, 170)]
     block_colors = ["#2ca02c", "#d62728", "#9467bd"]
-    for (bstart, bend), bc in zip(block_ranges, block_colors):
+    for (bstart, bend), bc in zip(block_ranges, block_colors, strict=False):
         # Find indices in our sampled positions that fall in each block
         idx_in_block = np.where((positions >= bstart) & (positions <= bend))[0]
         if len(idx_in_block) >= 2:
             lo = idx_in_block[0] - 0.5
             hi = idx_in_block[-1] + 0.5
             rect = plt.Rectangle(
-                (lo, lo), hi - lo, hi - lo,
-                linewidth=2.0, edgecolor=bc, facecolor="none", linestyle="--",
+                (lo, lo),
+                hi - lo,
+                hi - lo,
+                linewidth=2.0,
+                edgecolor=bc,
+                facecolor="none",
+                linestyle="--",
             )
             ax.add_patch(rect)
 

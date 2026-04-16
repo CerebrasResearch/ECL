@@ -52,8 +52,14 @@ class AsymmetricSyntheticModel:
     reference : int or None
     """
 
-    def __init__(self, seq_length=500, embed_dim=64, decay_upstream=100.0,
-                 decay_downstream=200.0, reference=None):
+    def __init__(
+        self,
+        seq_length=500,
+        embed_dim=64,
+        decay_upstream=100.0,
+        decay_downstream=200.0,
+        reference=None,
+    ):
         self._seq_length = seq_length
         self._embed_dim = embed_dim
         self._reference = reference if reference is not None else seq_length // 2
@@ -88,8 +94,7 @@ class AsymmetricSyntheticModel:
         return self._embed_dim
 
 
-def compute_directional_profiles(model_fn, sequences, reference, max_distance,
-                                  perturbation, rng):
+def compute_directional_profiles(model_fn, sequences, reference, max_distance, perturbation, rng):
     """Compute upstream and downstream influence profiles separately."""
     n, L = sequences.shape
     D = max_distance
@@ -128,8 +133,7 @@ def compute_directional_profiles(model_fn, sequences, reference, max_distance,
 
 def main():
     rng = np.random.default_rng(SEED)
-    output_dir = Path(__file__).resolve().parent.parent / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     reference = SEQ_LENGTH // 2
     perturbation = RandomSubstitution()
@@ -165,9 +169,7 @@ def main():
             perturbation=perturbation,
             rng=rng,
         )
-        ecl_up, ecl_down, asymmetry = directional_ecl(
-            distances, infl_up, infl_down, beta=0.9
-        )
+        ecl_up, ecl_down, asymmetry = directional_ecl(distances, infl_up, infl_down, beta=0.9)
         results[model_name] = {
             "distances": distances,
             "upstream": infl_up,
@@ -185,19 +187,28 @@ def main():
         ax = axes[idx]
         d = res["distances"]
 
-        ax.semilogy(d, res["upstream"], color="#1f77b4", linewidth=2.0,
-                     label=f"Upstream (ECL={res['ecl_up']} bp)")
-        ax.semilogy(d, res["downstream"], color="#ff7f0e", linewidth=2.0,
-                     label=f"Downstream (ECL={res['ecl_down']} bp)")
+        ax.semilogy(
+            d,
+            res["upstream"],
+            color="#1f77b4",
+            linewidth=2.0,
+            label=f"Upstream (ECL={res['ecl_up']} bp)",
+        )
+        ax.semilogy(
+            d,
+            res["downstream"],
+            color="#ff7f0e",
+            linewidth=2.0,
+            label=f"Downstream (ECL={res['ecl_down']} bp)",
+        )
 
         # Mark ECLs
-        ax.axvline(x=res["ecl_up"], color="#1f77b4", linestyle="--",
-                    linewidth=1.0, alpha=0.7)
-        ax.axvline(x=res["ecl_down"], color="#ff7f0e", linestyle="--",
-                    linewidth=1.0, alpha=0.7)
+        ax.axvline(x=res["ecl_up"], color="#1f77b4", linestyle="--", linewidth=1.0, alpha=0.7)
+        ax.axvline(x=res["ecl_down"], color="#ff7f0e", linestyle="--", linewidth=1.0, alpha=0.7)
 
-        ax.set_title(f"{model_name}\nAsymmetry ratio: {res['asymmetry']:.2f}",
-                      fontsize=12, fontweight="bold")
+        ax.set_title(
+            f"{model_name}\nAsymmetry ratio: {res['asymmetry']:.2f}", fontsize=12, fontweight="bold"
+        )
         ax.set_xlabel("Distance d (bp)", fontsize=11)
         if idx == 0:
             ax.set_ylabel(r"Influence $I^{\pm}(d; r)$", fontsize=11)

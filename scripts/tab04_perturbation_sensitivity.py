@@ -1,7 +1,7 @@
 """Table 4: ECL_0.9 (bp) under different perturbation types for each model.
 
-Uses ecl.perturbations with SyntheticModel to compare ECL estimates across
-substitution, shuffle, markov, and generative perturbation kernels.
+Paper Section 11.4: 4 models (Enformer, Borzoi, HyenaDNA, Caduceus) × 4
+perturbation types. Uses ecl.perturbations with SyntheticModel surrogates.
 """
 
 import sys
@@ -17,14 +17,12 @@ from ecl.ecl import ECL
 from ecl.models.base import SyntheticModel
 from ecl.perturbations import get_perturbation
 
+# Paper's 4 models for perturbation sensitivity comparison
 MODEL_CONFIGS = {
-    "DeepSEA": {"seq_length": 1000, "decay_length": 80.0},
-    "Basset": {"seq_length": 600, "decay_length": 50.0},
-    "Basenji": {"seq_length": 2000, "decay_length": 300.0},
     "Enformer": {"seq_length": 2000, "decay_length": 500.0},
+    "Borzoi": {"seq_length": 2000, "decay_length": 600.0},
     "HyenaDNA": {"seq_length": 2000, "decay_length": 400.0},
     "Caduceus": {"seq_length": 2000, "decay_length": 250.0},
-    "DNABERT-2": {"seq_length": 1000, "decay_length": 120.0},
 }
 
 PERTURBATION_TYPES = ["substitution", "shuffle", "markov", "generative"]
@@ -71,8 +69,7 @@ def _compute_ecl_with_perturbation(
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     rng = np.random.default_rng(42)
 

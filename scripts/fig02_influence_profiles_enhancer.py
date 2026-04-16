@@ -64,14 +64,13 @@ def generate_enhancer_sequences(n_loci, n_seq, seq_length, rng):
     gc_prob = 0.55
     at_prob = 1.0 - gc_prob
     probs = [at_prob / 2, gc_prob / 2, gc_prob / 2, at_prob / 2]
-    sequences = rng.choice(
-        4, size=(n_loci, n_seq, seq_length), p=probs
-    ).astype(np.int8)
+    sequences = rng.choice(4, size=(n_loci, n_seq, seq_length), p=probs).astype(np.int8)
     return sequences
 
 
-def compute_profiles_with_se(model_fn, sequences_all_loci, reference, max_distance,
-                              perturbation, rng):
+def compute_profiles_with_se(
+    model_fn, sequences_all_loci, reference, max_distance, perturbation, rng
+):
     """Compute mean influence profile and SE across loci."""
     n_loci = sequences_all_loci.shape[0]
     all_profiles = []
@@ -98,8 +97,7 @@ def compute_profiles_with_se(model_fn, sequences_all_loci, reference, max_distan
 
 def main():
     rng = np.random.default_rng(SEED)
-    output_dir = Path(__file__).resolve().parent.parent / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import FIGURE_DIR as output_dir
 
     # Generate enhancer-centered loci
     sequences = generate_enhancer_sequences(N_LOCI, N_SEQUENCES, SEQ_LENGTH, rng)

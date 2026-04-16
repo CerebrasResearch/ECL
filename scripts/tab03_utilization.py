@@ -16,13 +16,9 @@ import numpy as np
 from ecl.ecl import ECL
 from ecl.models.base import SyntheticModel
 
-# Model configs: (name, nominal_bp, seq_length_for_sim, decay_length)
+# Paper's 6 models: (name, nominal_bp, seq_length_for_sim, decay_length)
 # We use smaller seq_length for simulation but report the real nominal context.
 MODEL_CONFIGS = [
-    ("DeepSEA", 1000, 1000, 80.0),
-    ("Basset", 600, 600, 50.0),
-    ("Basenji", 131072, 2000, 300.0),
-    ("Basenji2", 131072, 2000, 280.0),
     ("Enformer", 196608, 2000, 500.0),
     ("Borzoi", 524288, 2000, 600.0),
     ("HyenaDNA", 1000000, 2000, 400.0),
@@ -69,8 +65,7 @@ def _compute_ecl_09(model: SyntheticModel, n_samples: int, rng: np.random.Genera
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parents[1] / "outputs"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    from _config import TABLE_DIR as output_dir
 
     rng = np.random.default_rng(42)
 
@@ -98,16 +93,16 @@ def main() -> None:
     lines = []
     lines.append(r"\begin{table}[t]")
     lines.append(r"\centering")
-    lines.append(r"\caption{Context utilization ratio $\mathrm{ECL}_{0.9} / \text{Nominal}$ for each model.}")
+    lines.append(
+        r"\caption{Context utilization ratio $\mathrm{ECL}_{0.9} / \text{Nominal}$ for each model.}"
+    )
     lines.append(r"\label{tab:utilization}")
     lines.append(r"\begin{tabular}{lrrr}")
     lines.append(r"\toprule")
     lines.append(r"Model & Nominal (bp) & $\mathrm{ECL}_{0.9}$ (bp) & Utilization (\%) \\")
     lines.append(r"\midrule")
     for model_name, nominal, ecl_val, util in rows:
-        lines.append(
-            f"{model_name} & {nominal:,} & {ecl_val:,.0f} & {util:.2f}" + r" \\"
-        )
+        lines.append(f"{model_name} & {nominal:,} & {ecl_val:,.0f} & {util:.2f}" + r" \\")
     lines.append(r"\bottomrule")
     lines.append(r"\end{tabular}")
     lines.append(r"\end{table}")
