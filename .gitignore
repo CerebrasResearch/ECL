@@ -48,3 +48,4 @@ docs/report/main.bbl
 docs/report/main.blg
 docs/report/main.log
 docs/report/main.out
+docs/report/*.sty
