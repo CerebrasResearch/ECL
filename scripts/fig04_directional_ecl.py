@@ -215,7 +215,7 @@ def main():
         ax.legend(fontsize=10, loc="upper right")
 
     fig.suptitle(
-        "Figure 4: Directional Influence Profiles (Upstream vs Downstream)",
+        "Directional Influence Profiles (Upstream vs Downstream)",
         fontsize=14,
         fontweight="bold",
         y=1.02,

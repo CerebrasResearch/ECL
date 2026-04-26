@@ -40,7 +40,7 @@
 
 % Colorful stuff %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\RequirePackage[most]{tcolorbox}
+\RequirePackage[skins,breakable]{tcolorbox}
 \RequirePackage{xcolor}
 \definecolor{metablue}{HTML}{0064E0}
 \definecolor{metafg}{HTML}{1C2B33}
@@ -52,6 +52,7 @@
 
 % References %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\RequirePackage{amsmath}
 \RequirePackage{hyperref}
 \RequirePackage[noabbrev,nameinlink]{cleveref}
 \hypersetup{

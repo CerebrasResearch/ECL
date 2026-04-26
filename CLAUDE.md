@@ -72,6 +72,45 @@ These are verified by the test suite:
 - **Bernstein concentration** (Thm 8.1): finite-sample guarantees for influence estimates
 - **Bootstrap validity** (Alg 3): percentile CI for ECL
 
+## Paper Completion Plan (ICLR 2026)
+
+6-phase plan. Full details: `/cb/home/omids/.claude/plans/radiant-cuddling-umbrella.md`
+
+### Phase 1: Fix Shuffle Bug in SyntheticModel
+- [x] Add dinucleotide interaction term to `SyntheticModel.forward()` in `src/ecl/models/base.py`
+- [x] Add `_dinuc_projection` to `SyntheticModel.__init__()`
+- [x] Fix `DinucleotideShuffle` single-position fallback (was no-op, now substitutes)
+- [x] Update fig01, fig02, fig05 to pass `block_width=20` for shuffle perturbation
+- [x] Verify: fig01 orange Shuffle line shows nonzero decay; fig05 scatter spreads above y=0
+
+### Phase 2: Fix Generic Labels
+- [x] `scripts/fig07_locus_class_violin.py`: "Model A/B" -> "Enformer/Borzoi (synthetic)"
+- [x] `scripts/fig09_model_comparison_paired.py`: same
+
+### Phase 3: CDS Fix + Aesthetics
+- [x] `src/ecl/cds.py`: tighten lambda upper bound 100->1.0, log-spaced initial guesses
+- [x] Remove "Figure N:" prefix from all 14 figure script suptitles
+- [x] Add unified `PERTURBATION_COLORS`, `MODEL_COLORS`, `set_paper_style()` to `scripts/_config.py`
+- [x] Fix fig02 colors to match fig01 (blue/orange not green/red)
+- [ ] Standardize `font_scale=1.2` across all scripts (deferred — minor)
+
+### Phase 4: LaTeX Section 11 Rewrite
+- [x] `docs/report/sections/11_experiments.tex`: title -> "Experiments"
+- [x] Replace "Proposed Figure N." paragraphs with `\includegraphics`
+- [x] Replace inline tables (`---`) with `\input{tables/tabNN_*.tex}`
+- [x] Remove "Proposed" / "Expected:" language; add synthetic disclaimer
+
+### Phase 5: Real Model Experiments (GPU required)
+- [x] Remove hardcoded HF token (use env var)
+- [ ] Add missing experiments to `scripts/run_real_experiments.py` (fig04,09,12; tab05; figA1,A2; tabA1)
+- [ ] Run full suite on GPU
+
+### Phase 6: Final Integration
+- [x] `make all-experiments` to regenerate all outputs (running)
+- [x] `make test` (106 tests pass)
+- [ ] `pdflatex` + `bibtex` compile
+- [ ] Visual spot-check all figures/tables in compiled PDF
+
 ## Testing
 
 106 tests across 8 files. Key test categories:

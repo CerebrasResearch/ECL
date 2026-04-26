@@ -1,6 +1,6 @@
 """Figure 3: Cumulative influence fraction with ECL estimates and bootstrap CIs.
 
-Plots I_{<=l}(r) / I_tot(r) vs radius l (bp) for all six synthetic models
+Plots I_{<=l}(r) / I_tot(r) vs radius l (bp) for all eight synthetic models
 overlaid on one panel. Horizontal lines at beta thresholds (0.5, 0.8, 0.9,
 0.95, 0.99). Vertical lines at ECL estimates. Bootstrap 95% CIs shown as
 horizontal error bars at each model's ECL.
@@ -34,7 +34,9 @@ MODEL_CONFIGS = {
     "HyenaDNA": 80.0,
     "Caduceus": 120.0,
     "DNABERT-2": 60.0,
-    "Evo-2": 250.0,
+    "Evo 2 (7B)": 220.0,
+    "NT-v2": 90.0,
+    "NT-v3": 100.0,
 }
 
 SEQ_LENGTH = 500
@@ -177,7 +179,7 @@ def main():
     ax.set_xlabel("Radius l (bp)", fontsize=12)
     ax.set_ylabel(r"$I_{\leq l}(r) \;/\; I_{\mathrm{tot}}(r)$", fontsize=12)
     ax.set_title(
-        "Figure 3: Cumulative Influence Fraction with ECL Estimates",
+        "Cumulative Influence Fraction with ECL Estimates",
         fontsize=14,
         fontweight="bold",
     )

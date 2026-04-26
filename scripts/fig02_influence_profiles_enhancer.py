@@ -43,7 +43,9 @@ MODEL_CONFIGS = {
     "HyenaDNA": 100.0,
     "Caduceus": 140.0,
     "DNABERT-2": 70.0,
-    "Evo-2": 300.0,
+    "Evo 2 (7B)": 260.0,
+    "NT-v2": 105.0,
+    "NT-v3": 115.0,
 }
 
 SEQ_LENGTH = 500
@@ -69,7 +71,13 @@ def generate_enhancer_sequences(n_loci, n_seq, seq_length, rng):
 
 
 def compute_profiles_with_se(
-    model_fn, sequences_all_loci, reference, max_distance, perturbation, rng
+    model_fn,
+    sequences_all_loci,
+    reference,
+    max_distance,
+    perturbation,
+    rng,
+    block_width=1,
 ):
     """Compute mean influence profile and SE across loci."""
     n_loci = sequences_all_loci.shape[0]
@@ -86,6 +94,7 @@ def compute_profiles_with_se(
             perturbation=perturbation,
             rng=rng,
             show_progress=False,
+            block_width=block_width,
         )
         all_profiles.append(influence)
 
@@ -104,8 +113,8 @@ def main():
     reference = SEQ_LENGTH // 2
 
     perturbations = {
-        "Substitution": RandomSubstitution(),
-        "Shuffle": DinucleotideShuffle(),
+        "Substitution": (RandomSubstitution(), 1),
+        "Shuffle": (DinucleotideShuffle(), 20),
     }
 
     # Build synthetic models
@@ -122,7 +131,7 @@ def main():
     results = {}
     for model_name, model in models.items():
         results[model_name] = {}
-        for pert_name, pert in perturbations.items():
+        for pert_name, (pert, bw) in perturbations.items():
             print(f"  Computing: {model_name} / {pert_name}...")
             d, mean_prof, se_prof = compute_profiles_with_se(
                 model_fn=model,
@@ -131,17 +140,18 @@ def main():
                 max_distance=MAX_DISTANCE,
                 perturbation=pert,
                 rng=rng,
+                block_width=bw,
             )
             results[model_name][pert_name] = (d, mean_prof, se_prof)
 
-    # Plot: 2x3 grid
+    # Plot: 2x4 grid
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.1)
-    fig, axes = plt.subplots(2, 3, figsize=(14, 8), sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, 4, figsize=(18, 8), sharex=True, sharey=True)
     model_names = list(MODEL_CONFIGS.keys())
-    colors = {"Substitution": "#2ca02c", "Shuffle": "#d62728"}
+    colors = {"Substitution": "#1f77b4", "Shuffle": "#ff7f0e"}
 
     for idx, model_name in enumerate(model_names):
-        row, col = divmod(idx, 3)
+        row, col = divmod(idx, 4)
         ax = axes[row, col]
 
         for pert_name, color in colors.items():
@@ -169,7 +179,7 @@ def main():
             ax.legend(fontsize=9, loc="upper right")
 
     fig.suptitle(
-        "Figure 2: Influence Profiles for Enhancer-Centered Loci",
+        "Influence Profiles for Enhancer-Centered Loci",
         fontsize=14,
         fontweight="bold",
         y=0.98,

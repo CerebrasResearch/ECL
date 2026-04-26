@@ -237,7 +237,7 @@ def main():
     ax2.set_ylim(0, 1.05)
 
     fig.suptitle(
-        "Figure 6: Trained vs Random-Weight Model Influence",
+        "Trained vs Random-Weight Model Influence",
         fontsize=14,
         fontweight="bold",
         y=1.02,

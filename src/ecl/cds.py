@@ -82,10 +82,16 @@ def _fit_nls(d: npt.NDArray, y: npt.NDArray, K: int) -> dict:
     p0 = []
     bounds_lo = []
     bounds_hi = []
+    # Log-spaced initial lambda guesses between lam_min and lam_max
+    lam_inits = np.logspace(
+        np.log10(max(lam_min, 1e-6)),
+        np.log10(min(lam_max, 0.5)),
+        K + 2,
+    )[1:-1]
     for k in range(K):
-        p0.extend([a_init, lam_min + (lam_max - lam_min) * (k + 1) / (K + 1)])
+        p0.extend([a_init, float(lam_inits[k]) if k < len(lam_inits) else lam_min])
         bounds_lo.extend([0.0, 1e-6])
-        bounds_hi.extend([np.inf, 100.0])
+        bounds_hi.extend([np.inf, 1.0])  # cap at 1.0: no sub-1bp decay
 
     try:
         popt, _ = curve_fit(_mixture_exp, d, y, p0=p0, bounds=(bounds_lo, bounds_hi), maxfev=10000)

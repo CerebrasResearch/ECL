@@ -1,0 +1,4 @@
+\ProvidesPackage{trimspaces}[2009/02/09 v1.1]
+\def\trim@spaces#1{\trim@spaces@i #1 \@nil}
+\def\trim@spaces@i#1 \@nil{#1}
+\newcommand{\trimspace}[1]{\trim@spaces{#1}}

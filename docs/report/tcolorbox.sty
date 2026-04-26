@@ -1,0 +1,15 @@
+% Minimal tcolorbox shim for TeX Live 2020 compatibility
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tcolorbox}[2024/01/01 Minimal shim]
+\RequirePackage{xcolor}
+\DeclareOption*{}
+\ProcessOptions\relax
+\newcommand{\tcbset}[1]{}
+\definecolor{tcb@colback}{HTML}{F1F4F7}
+\newsavebox{\tcb@box}
+\newenvironment{tcolorbox}[1][]{%
+  \begin{lrbox}{\tcb@box}\begin{minipage}{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}\vspace{0.25cm}%
+}{%
+  \vspace{0.95cm}\end{minipage}\end{lrbox}%
+  \par\noindent\fcolorbox{tcb@colback}{tcb@colback}{\usebox{\tcb@box}}\par%
+}

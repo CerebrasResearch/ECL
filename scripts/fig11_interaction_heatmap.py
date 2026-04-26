@@ -174,7 +174,7 @@ def main() -> None:
     ax.set_xlabel("Position j (bp)", fontsize=13)
     ax.set_ylabel("Position i (bp)", fontsize=13)
     ax.set_title(
-        r"Figure 11: Pairwise Interaction Influence $I_{\mathrm{int}}(i, j; r)$",
+        r"Pairwise Interaction Influence $I_{\mathrm{int}}(i, j; r)$",
         fontsize=14,
         fontweight="bold",
     )

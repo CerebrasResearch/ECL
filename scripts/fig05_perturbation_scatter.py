@@ -42,7 +42,9 @@ MODEL_CONFIGS = {
     "HyenaDNA": 80.0,
     "Caduceus": 120.0,
     "DNABERT-2": 60.0,
-    "Evo-2": 250.0,
+    "Evo 2 (7B)": 220.0,
+    "NT-v2": 90.0,
+    "NT-v3": 100.0,
 }
 
 SEQ_LENGTH = 300
@@ -54,7 +56,9 @@ BETA = 0.9
 SEED = 99
 
 
-def fast_ecl_at_locus(model_fn, sequences, reference, max_distance, perturbation, rng):
+def fast_ecl_at_locus(
+    model_fn, sequences, reference, max_distance, perturbation, rng, block_width=1
+):
     """Compute ECL_beta for a single locus from a small batch of sequences.
 
     Uses a lightweight single-pass estimation (one position per distance)
@@ -62,6 +66,7 @@ def fast_ecl_at_locus(model_fn, sequences, reference, max_distance, perturbation
     """
     n, L = sequences.shape
     D = max_distance
+    half_block = block_width // 2
     distances = np.arange(D + 1)
     influence = np.zeros(D + 1, dtype=np.float64)
 
@@ -75,11 +80,18 @@ def fast_ecl_at_locus(model_fn, sequences, reference, max_distance, perturbation
             continue
 
         pos = rng.choice(candidates)
+        if block_width <= 1:
+            pos_arr = np.array([pos])
+        else:
+            lo = max(0, int(pos) - half_block)
+            hi = min(L, int(pos) + half_block + 1)
+            pos_arr = np.arange(lo, hi)
+
         accum = 0.0
         for t in range(n):
             seq = sequences[t]
             z = model_fn(seq)
-            perturbed = perturbation(seq, np.array([pos]), rng)
+            perturbed = perturbation(seq, pos_arr, rng)
             z_pert = model_fn(perturbed)
             accum += float(squared_euclidean(z, z_pert))
         influence[d] = accum / n
@@ -94,8 +106,8 @@ def main():
     reference = SEQ_LENGTH // 2
 
     perturbations = {
-        "substitution": RandomSubstitution(),
-        "shuffle": DinucleotideShuffle(),
+        "substitution": (RandomSubstitution(), 1),
+        "shuffle": (DinucleotideShuffle(), 20),
     }
 
     # Pre-generate all locus sequences
@@ -120,7 +132,7 @@ def main():
         print(f"  Computing {N_LOCI} loci for {model_name}...")
         for locus_idx in range(N_LOCI):
             seqs = all_sequences[locus_idx]
-            for pert_name, pert in perturbations.items():
+            for pert_name, (pert, bw) in perturbations.items():
                 ecl_val = fast_ecl_at_locus(
                     model_fn=model,
                     sequences=seqs,
@@ -128,6 +140,7 @@ def main():
                     max_distance=MAX_DISTANCE,
                     perturbation=pert,
                     rng=rng,
+                    block_width=bw,
                 )
                 scatter_data[model_name][pert_name].append(ecl_val)
 
@@ -169,7 +182,7 @@ def main():
     ax.set_xlabel(r"ECL$_{0.9}$ (Substitution) [bp]", fontsize=12)
     ax.set_ylabel(r"ECL$_{0.9}$ (Shuffle) [bp]", fontsize=12)
     ax.set_title(
-        "Figure 5: Perturbation Comparison -- ECL(Shuffle) vs ECL(Substitution)\n"
+        "Perturbation Comparison: ECL(Shuffle) vs ECL(Substitution)\n"
         f"({N_LOCI} promoter loci per model; diamonds = means)",
         fontsize=13,
         fontweight="bold",

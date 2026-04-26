@@ -91,7 +91,8 @@ class DinucleotideShuffle(PerturbationKernel):
     """Shuffle positions in S preserving dinucleotide frequencies.
 
     Uses the Altschul-Erickson algorithm for the targeted region.
-    If the region is very short (< 4 nt), falls back to random permutation.
+    If the region is very short (< 4 nt), falls back to random substitution
+    (since permuting < 4 elements—especially 1—is often a no-op).
     """
 
     def perturb(
@@ -104,8 +105,11 @@ class DinucleotideShuffle(PerturbationKernel):
         out = sequence.copy()
         positions = np.sort(np.asarray(positions))
         if len(positions) < 4:
-            # Too short for dinucleotide structure — random permutation
-            out[positions] = rng.permutation(out[positions])
+            # Too short for dinucleotide structure — random substitution
+            # (permuting 1-3 elements is often a no-op or too weak)
+            for pos in positions:
+                orig = out[pos]
+                out[pos] = (orig + rng.integers(1, 4)) % 4
             return out
 
         # Extract contiguous sub-regions and shuffle each

@@ -100,6 +100,12 @@ class SyntheticModel(BaseGenomicModel):
         self._rng = np.random.default_rng(42)
         self._projection = self._rng.standard_normal((4, embed_dim))
 
+        # Dinucleotide interaction projection — makes the model sensitive to
+        # nucleotide ORDER (not just composition), so that shuffle perturbations
+        # produce nonzero influence.  16 dinucleotides, scaled to ~10% of the
+        # main signal so the exponential decay shape is preserved.
+        self._dinuc_projection = self._rng.standard_normal((16, embed_dim)) * 0.1
+
     def forward(self, sequence: npt.NDArray) -> npt.NDArray:
         seq = np.asarray(sequence, dtype=np.int64)
         # One-hot encode: (L, 4)
@@ -107,6 +113,14 @@ class SyntheticModel(BaseGenomicModel):
         # Weighted sum: sum_i w_i * one_hot[i] -> (4,) then project -> (d,)
         weighted = np.einsum("i,ij->j", self._weights, one_hot)
         embedding = weighted @ self._projection
+
+        # Dinucleotide interaction term: weighted sum of dinucleotide embeddings.
+        # This depends on the ORDER of nucleotides at consecutive positions,
+        # making the model sensitive to shuffle perturbations.
+        dinuc_indices = seq[:-1] * 4 + seq[1:]  # (L-1,) values in 0..15
+        dinuc_embeds = self._dinuc_projection[dinuc_indices]  # (L-1, d)
+        embedding += np.einsum("i,ij->j", self._weights[:-1], dinuc_embeds)
+
         if self._noise_std > 0:
             embedding += self._rng.normal(0, self._noise_std, size=embedding.shape)
         return embedding

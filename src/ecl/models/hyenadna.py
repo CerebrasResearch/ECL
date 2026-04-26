@@ -34,7 +34,7 @@ class HyenaDNAWrapper(BaseGenomicModel):
     def __init__(
         self,
         model_name: str = "LongSafari/hyenadna-large-1m-seqlen-hf",
-        device: str = "cpu",
+        device: str = "cuda",
         reference_position: int | None = None,
     ):
         self._model_name = model_name

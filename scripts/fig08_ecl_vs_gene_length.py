@@ -94,7 +94,7 @@ def main() -> None:
     ax.set_xlabel("Gene Length (bp)", fontsize=13)
     ax.set_ylabel(r"ECL$_{0.9}$ (bp)", fontsize=13)
     ax.set_title(
-        "Figure 8: ECL$_{0.9}$ vs Gene Length by Expression Level",
+        "ECL$_{0.9}$ vs Gene Length by Expression Level",
         fontsize=14,
         fontweight="bold",
     )

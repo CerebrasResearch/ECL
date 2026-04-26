@@ -36,3 +36,15 @@ Thumbs.db
 # Secrets
 .env
 *.key
+
+# Bio
+**/*.fa
+**/*.fai
+
+# LaTeX build artifacts
+docs/report/main.pdf
+docs/report/main.aux
+docs/report/main.bbl
+docs/report/main.blg
+docs/report/main.log
+docs/report/main.out

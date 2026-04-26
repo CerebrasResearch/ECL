@@ -29,7 +29,9 @@ MODEL_CONFIGS = {
     "HyenaDNA": 80.0,
     "Caduceus": 120.0,
     "DNABERT-2": 60.0,
-    "Evo-2": 250.0,
+    "Evo 2 (7B)": 220.0,
+    "NT-v2": 90.0,
+    "NT-v3": 100.0,
 }
 
 LOCUS_CLASSES = {
@@ -143,7 +145,7 @@ def main():
     ax.set_title("(B) ECD by Locus Class", fontweight="bold")
 
     fig.suptitle(
-        "Appendix: Effective Context Dimension (ECD) Analysis",
+        "Effective Context Dimension (ECD) Analysis",
         fontsize=14,
         fontweight="bold",
         y=0.98,

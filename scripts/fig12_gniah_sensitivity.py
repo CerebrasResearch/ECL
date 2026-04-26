@@ -130,7 +130,7 @@ def main() -> None:
     )
 
     fig.suptitle(
-        "Figure 12: gNIAH Sensitivity vs Distance for Regulatory Motifs",
+        "gNIAH Sensitivity vs Distance for Regulatory Motifs",
         fontsize=14,
         fontweight="bold",
         y=1.02,

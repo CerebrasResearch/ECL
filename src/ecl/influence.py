@@ -76,6 +76,7 @@ def compute_influence_profile(
     metric: Callable = squared_euclidean,
     rng: np.random.Generator | None = None,
     show_progress: bool = True,
+    block_width: int = 1,
 ) -> tuple[npt.NDArray, npt.NDArray]:
     """Binned influence profile estimator (Algorithm 2).
 
@@ -100,6 +101,10 @@ def compute_influence_profile(
     rng : numpy random generator.
     show_progress : bool
         Whether to show tqdm progress bar.
+    block_width : int
+        Width of contiguous block to perturb around each target position.
+        Default 1 (single position). Set > 1 for perturbations like
+        DinucleotideShuffle that need context (e.g. 20).
 
     Returns
     -------
@@ -115,6 +120,7 @@ def compute_influence_profile(
     if max_distance is None:
         max_distance = L // 2
 
+    half_block = block_width // 2
     distances = np.arange(max_distance + 1)
     influence = np.zeros(max_distance + 1, dtype=np.float64)
 
@@ -140,7 +146,13 @@ def compute_influence_profile(
             seq = sequences[t]
             z = model_fn(seq)
             for pos in sampled_positions:
-                perturbed = perturbation(seq, np.array([pos]), rng)
+                if block_width <= 1:
+                    pos_arr = np.array([pos])
+                else:
+                    lo = max(0, int(pos) - half_block)
+                    hi = min(L, int(pos) + half_block + 1)
+                    pos_arr = np.arange(lo, hi)
+                perturbed = perturbation(seq, pos_arr, rng)
                 z_pert = model_fn(perturbed)
                 accum += float(metric(z, z_pert))
                 count += 1

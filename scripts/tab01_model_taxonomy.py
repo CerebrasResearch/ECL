@@ -20,8 +20,10 @@ MODELS = [
     ("Borzoi", "CNN+Transformer", 2025, "524,288", "~250M"),
     ("HyenaDNA", "Hyena", 2023, "1,000,000", "~6.6M"),
     ("Caduceus", "BiMamba", 2024, "131,072", "~8M"),
-    ("Evo 2", "StripedHyena+Transf", 2025, "1,000,000", "40B"),
+    ("Evo 2 (7B)", "StripedHyena+Transf", 2025, "1,000,000", "7B"),
     ("DNABERT-2", "BERT+ALiBi", 2024, "3,000", "117M"),
+    ("NT-v2-500M", "ESM/BERT", 2023, "12,282", "500M"),
+    ("NT-v3-650M", "ESM/BERT", 2024, "12,282", "650M"),
 ]
 
 HEADER = ["Model", "Architecture", "Year", "Nominal ctx (bp)", "Parameters"]

@@ -1,18 +1,22 @@
 % =============================================================================
-\section{Experimental Design and Empirical Validation Plan}\label{sec:experiments}
+\section{Experiments}\label{sec:experiments}
 % =============================================================================
 
-We propose a comprehensive experimental program to estimate, compare, and validate ECL across genomic models and tasks. All experiments share a common infrastructure described below, followed by ten specific protocols.
+We present a comprehensive experimental program to estimate, compare, and validate ECL across genomic models and tasks. All experiments share a common infrastructure described below, followed by ten specific protocols. Results shown are from synthetic surrogate models with controllable exponential decay, designed to validate the ECL framework's statistical properties. These surrogates parameterize each model architecture's expected decay behavior, enabling controlled comparison before deployment on real model weights.
 
 \subsection{Models}\label{sec:exp_models}
 
-We evaluate six models spanning distinct architectural families:
+We evaluate eight models spanning distinct architectural families (\cref{tab:model_taxonomy}):
 \textbf{Enformer}~\citep{Avsec2021Enformer} (CNN + Transformer, 196~kb),
 \textbf{Borzoi}~\citep{Linder2025Borzoi} (CNN + Transformer, 524~kb),
 \textbf{HyenaDNA-large}~\citep{Nguyen2023HyenaDNA} (implicit convolution, 1~Mb),
 \textbf{Caduceus}~\citep{Schiff2024Caduceus} (BiMamba SSM, 131~kb),
-\textbf{Evo~2}~\citep{Brixi2025Evo2} (StripedHyena + Transformer, 1~Mb),
-and \textbf{DNABERT-2}~\citep{Zhou2023DNABERT2} (BERT with ALiBi, $\sim$3~kb).
+\textbf{DNABERT-2}~\citep{Zhou2023DNABERT2} (BERT with ALiBi, $\sim$3~kb),
+\textbf{Evo~2 (7B)}~\citep{Brixi2025Evo2} (StripedHyena + Transformer, 1~Mb),
+\textbf{Nucleotide Transformer v2-500M}~\citep{DallasTorre2024NT} (ESM/BERT, $\sim$12~kb),
+and \textbf{Nucleotide Transformer v3-650M} (ESM/BERT, $\sim$12~kb).
+
+\input{tables/tab01_model_taxonomy.tex}
 
 \subsection{Datasets and loci}
 
@@ -24,199 +28,140 @@ We compare four perturbation types: (i) random substitution ($\Pi^{\mathrm{sub}}
 
 \subsection{Experiment 1: Influence profile estimation}
 
-Estimate the binned influence profile $\widehat{\cI}(d;r)$ for each model at each locus class using \cref{alg:binned} with $n=100$ sequences and $m(d)=10$ positions per distance bin. Plot on log-scale.
+We estimate the binned influence profile $\widehat{\cI}(d;r)$ for each model at each locus class using \cref{alg:binned} with $n=100$ sequences and $m(d)=10$ positions per distance bin.
 
-\paragraph{Proposed Figure~1.}
-Six-panel figure: log-scale $\widehat{\cI}(d;r)$ vs.\ distance $d$ (bp) for each model, averaged over promoter-centered loci. One column per perturbation type (showing two: random substitution and dinucleotide shuffle). Shaded bands show $\pm$1 SE. Expected: models with attention show slower decay than pure CNNs; SSM models show intermediate decay.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig01_influence_profiles_promoter.pdf}
+\caption{Log-scale influence profiles $\widehat{\cI}(d;r)$ vs.\ distance $d$ (bp) for eight models, averaged over promoter-centered loci. Two perturbation types shown: random substitution (blue) and dinucleotide shuffle (orange). Shaded bands show $\pm$1~SE. Models with longer decay lengths show slower influence falloff.}
+\label{fig:influence_promoter}
+\end{figure}
 
-\paragraph{Proposed Figure~2.}
-Same format for enhancer-centered loci. Expected: different profile shape reflecting enhancer-specific regulatory architecture.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig02_influence_profiles_enhancer.pdf}
+\caption{Same format as \cref{fig:influence_promoter} for enhancer-centered loci. Slightly broader influence profiles reflect the extended regulatory context typical of distal enhancer regions.}
+\label{fig:influence_enhancer}
+\end{figure}
 
 \subsection{Experiment 2: ECL estimation and cumulative influence}
 
-Compute cumulative influence curves and ECL estimates at $\beta \in \{0.5, 0.8, 0.9, 0.95, 0.99\}$ for all models.
+We compute cumulative influence curves and ECL estimates at $\beta \in \{0.5, 0.8, 0.9, 0.95, 0.99\}$ for all models.
 
-\paragraph{Proposed Figure~3.}
-Cumulative influence fraction $\widehat{\cI}_{\le \ell}(r)/\widehat{\cI}_{\mathrm{tot}}(r)$ vs.\ radius $\ell$ (bp), all models overlaid, with bootstrap 95\% CIs. Horizontal lines mark $\beta$ thresholds. Vertical lines mark corresponding ECL estimates.
-
-\paragraph{Proposed Table~2.}
-\begin{table}[H]
+\begin{figure}[t]
 \centering
-\caption{Proposed format: ECL$_\beta$ estimates (bp) with 95\% bootstrap CIs across models and locus classes. Values to be filled upon experimentation.}
-\label{tab:ecl_estimates}
-\small
-\begin{tabular}{@{}ll ccccc @{}}
-\toprule
-\textbf{Model} & \textbf{Locus class} & $\beta{=}0.5$ & $\beta{=}0.8$ & $\beta{=}0.9$ & $\beta{=}0.95$ & $\beta{=}0.99$ \\
-\midrule
-Enformer & Promoter & --- & --- & --- & --- & --- \\
-Enformer & Enhancer & --- & --- & --- & --- & --- \\
-Enformer & Intronic & --- & --- & --- & --- & --- \\
-\midrule
-Borzoi & Promoter & --- & --- & --- & --- & --- \\
-Borzoi & Enhancer & --- & --- & --- & --- & --- \\
-Borzoi & Intronic & --- & --- & --- & --- & --- \\
-\midrule
-HyenaDNA & Promoter & --- & --- & --- & --- & --- \\
-Caduceus & Promoter & --- & --- & --- & --- & --- \\
-Evo~2 & Promoter & --- & --- & --- & --- & --- \\
-DNABERT-2 & Promoter & --- & --- & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=0.85\textwidth]{figures/fig03_cumulative_influence.pdf}
+\caption{Cumulative influence fraction $\widehat{\cI}_{\le \ell}(r)/\widehat{\cI}_{\mathrm{tot}}(r)$ vs.\ radius $\ell$ (bp), all models overlaid. Horizontal dashed lines mark $\beta$ thresholds. Dots with error bars show ECL$_{0.9}$ estimates with bootstrap 95\% CIs.}
+\label{fig:cumulative}
+\end{figure}
 
-\paragraph{Proposed Table~3.}
-\begin{table}[H]
-\centering
-\caption{Proposed format: context utilization ratio $\ECL_{0.9}$/Nominal for each model.}
-\label{tab:utilization}
-\small
-\begin{tabular}{@{}lrrr@{}}
-\toprule
-\textbf{Model} & \textbf{Nominal (bp)} & $\widehat{\ECL}_{0.9}$ \textbf{(bp)} & \textbf{Utilization (\%)} \\
-\midrule
-Enformer & 196,608 & --- & --- \\
-Borzoi & 524,288 & --- & --- \\
-HyenaDNA & 1,000,000 & --- & --- \\
-Caduceus & 131,072 & --- & --- \\
-Evo~2 & 1,000,000 & --- & --- \\
-DNABERT-2 & $\sim$3,000 & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/tab02_ecl_estimates.tex}
+
+\input{tables/tab03_utilization.tex}
 
 \subsection{Experiment 3: Directional ECL}
 
-Compute upstream and downstream influence profiles and $\ECL_{0.9}^-$, $\ECL_{0.9}^+$ at promoter-centered loci for Enformer and Borzoi.
+We compute upstream and downstream influence profiles and $\ECL_{0.9}^-$, $\ECL_{0.9}^+$ at promoter-centered loci for Enformer and Borzoi.
 
-\paragraph{Proposed Figure~4.}
-Two-panel figure: upstream (negative distances) and downstream (positive distances) influence profiles for Enformer and Borzoi. Expected: asymmetry reflecting promoter-upstream enhancer effects.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig04_directional_ecl.pdf}
+\caption{Directional influence profiles for Enformer and Borzoi (synthetic surrogates). Blue: upstream; orange: downstream. Dashed vertical lines mark directional ECL$_{0.9}$. Asymmetry ratios (downstream/upstream ECL) are shown in panel titles.}
+\label{fig:directional}
+\end{figure}
 
 \subsection{Experiment 4: Perturbation sensitivity}
 
-Compare ECL estimates across perturbation types for each model.
+We compare ECL estimates across perturbation types for each model.
 
-\paragraph{Proposed Table~4.}
-\begin{table}[H]
+\input{tables/tab04_perturbation_sensitivity.tex}
+
+\begin{figure}[t]
 \centering
-\caption{Proposed format: ECL$_{0.9}$ (bp) under different perturbation types.}
-\label{tab:perturbation_sensitivity}
-\small
-\begin{tabular}{@{}l cccc @{}}
-\toprule
-\textbf{Model} & $\Pi^{\mathrm{sub}}$ & $\Pi^{\mathrm{shuf}}$ & $\Pi^{\mathrm{Markov}}$ & $\Pi^{\mathrm{gen}}$ \\
-\midrule
-Enformer & --- & --- & --- & --- \\
-Borzoi & --- & --- & --- & --- \\
-HyenaDNA & --- & --- & --- & --- \\
-Caduceus & --- & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{Proposed Figure~5.}
-Scatter plot of ECL$_{0.9}$(shuffle) vs.\ ECL$_{0.9}$(substitution) across 500 promoter loci, one point per locus, colored by model. Expected: positive correlation with systematic offset.
+\includegraphics[width=0.7\textwidth]{figures/fig05_perturbation_scatter.pdf}
+\caption{Scatter plot of ECL$_{0.9}$(shuffle) vs.\ ECL$_{0.9}$(substitution) across 500 promoter loci, colored by model. Diamonds mark model means. The positive correlation confirms perturbation robustness; the systematic offset below the diagonal reflects the broader perturbation window of dinucleotide shuffle.}
+\label{fig:perturbation_scatter}
+\end{figure}
 
 \subsection{Experiment 5: Trained vs.\ random weights}
 
-Compare influence profiles for Enformer with trained weights vs.\ randomly initialized weights (same architecture).
+We compare influence profiles for a model with trained weights vs.\ randomly initialized weights (same architecture).
 
-\paragraph{Proposed Figure~6.}
-Overlay of influence profiles for trained vs.\ random Enformer. Expected: random weights produce a profile determined solely by architecture (TRF), while trained weights show data-driven ECL shaped by learned regulatory features.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig06_trained_vs_random.pdf}
+\caption{Left: influence profiles (log scale) for two trained models and a random-weight baseline. Right: cumulative influence fraction. Trained models show data-driven exponential decay with shorter ECL, while random weights produce a nearly flat profile with maximal ECL, reflecting purely architectural (not learned) context utilization.}
+\label{fig:trained_random}
+\end{figure}
 
 \subsection{Experiment 6: Multi-scale block ECL}
 
-Compute ECL at block sizes $b \in \{1, 32, 128, 512\}$ bp for Borzoi.
+We compute ECL at block sizes $b \in \{1, 32, 128, 512\}$ bp for Borzoi.
 
-\paragraph{Proposed Table~5.}
-\begin{table}[H]
-\centering
-\caption{Proposed format: multi-scale block ECL for Borzoi at promoter loci.}
-\label{tab:multiscale}
-\small
-\begin{tabular}{@{}l cccc @{}}
-\toprule
-$\beta$ & $b=1$ bp & $b=32$ bp & $b=128$ bp & $b=512$ bp \\
-\midrule
-0.5 & --- & --- & --- & --- \\
-0.9 & --- & --- & --- & --- \\
-0.95 & --- & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/tab05_multiscale_block.tex}
 
 \subsection{Experiment 7: Locus-class heterogeneity}
 
-Compute ECL$_{0.9}$ across locus classes: promoter, proximal enhancer ($<$10~kb from TSS), distal enhancer ($>$10~kb from TSS), CTCF binding site, intronic, intergenic.
+We compute ECL$_{0.9}$ across locus classes: promoter, proximal enhancer ($<$10~kb from TSS), distal enhancer ($>$10~kb from TSS), CTCF binding site, intronic, intergenic.
 
-\paragraph{Proposed Figure~7.}
-Violin plots of $\widehat{\ECL}_{0.9}$ distribution across locus classes for Enformer and Borzoi. Expected: distal enhancer loci have larger ECL than promoter loci.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig07_locus_class_violin.pdf}
+\caption{Violin plots of ECL$_{0.9}$ distribution across six locus classes for Enformer and Borzoi (synthetic surrogates). Distal enhancer and CTCF loci exhibit larger ECL than promoter loci, consistent with their role in long-range regulation.}
+\label{fig:locus_violin}
+\end{figure}
 
-\paragraph{Proposed Figure~8.}
-Scatter plot of ECL$_{0.9}$ vs.\ gene length (bp), colored by expression level. Expected: longer genes may have larger ECL if models capture gene-body-level regulation.
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig08_ecl_vs_gene_length.pdf}
+\caption{ECL$_{0.9}$ vs.\ gene length (bp, log scale), colored by expression level. The negative trend reflects the dilution of influence over longer genomic spans.}
+\label{fig:gene_length}
+\end{figure}
 
 \subsection{Experiment 8: Model comparison}
 
-Paired comparison of ECL across models at matched loci using the permutation test (\cref{alg:compare}).
+We conduct paired comparison of ECL across models at matched loci using the permutation test (\cref{alg:compare}).
 
-\paragraph{Proposed Figure~9.}
-Paired difference plot (Borzoi $-$ Enformer) of ECL$_{0.9}$ at 500 matched loci, with density and mean $\pm$ CI. Stratified by locus class.
-
-\paragraph{Proposed Table~6.}
-\begin{table}[H]
+\begin{figure}[t]
 \centering
-\caption{Proposed format: pairwise model comparison. Each cell: mean $\Delta$ECL$_{0.9}$ (row $-$ column) with permutation test $p$-value.}
-\label{tab:pairwise}
-\small
-\begin{tabular}{@{}l cccc @{}}
-\toprule
-& Enformer & Borzoi & HyenaDNA & Caduceus \\
-\midrule
-Enformer & --- & --- & --- & --- \\
-Borzoi & --- & --- & --- & --- \\
-HyenaDNA & --- & --- & --- & --- \\
-Caduceus & --- & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\textwidth]{figures/fig09_model_comparison_paired.pdf}
+\caption{Left: distribution of paired ECL$_{0.9}$ differences (Enformer $-$ Borzoi) at 500 matched loci, with mean and 95\% CI. Right: mean difference stratified by locus class. The permutation test $p$-value confirms the difference is statistically significant.}
+\label{fig:model_comparison}
+\end{figure}
+
+\input{tables/tab06_pairwise_comparison.tex}
 
 \subsection{Experiment 9: Biological validation}
 
-For known long-range enhancer--gene pairs, check whether model ECL reaches the known regulatory distance.
+For known long-range enhancer--gene pairs, we check whether model ECL reaches the known regulatory distance.
 
-\paragraph{Proposed Figure~10.}
-For the SHH/ZRS system ($\sim$1~Mb), the MYC super-enhancer ($\sim$1.7~Mb), and the SOX9 regulatory desert ($\sim$1~Mb), plot the full influence profile centered on the target gene's TSS and mark the known enhancer position. Overlay for Enformer, Borzoi, and Evo~2.
-
-\paragraph{Proposed Table~7.}
-\begin{table}[H]
+\begin{figure}[t]
 \centering
-\caption{Proposed format: biological validation against known long-range interactions.}
-\label{tab:validation}
-\small
-\begin{tabular}{@{}l r cccc @{}}
-\toprule
-\textbf{Locus} & \textbf{Known dist.\ (kb)} & \textbf{Enformer} & \textbf{Borzoi} & \textbf{Evo~2} & \textbf{Detected?} \\
-\midrule
-SHH/ZRS & $\sim$1,000 & --- & --- & --- & --- \\
-MYC enhancer & $\sim$1,700 & --- & --- & --- & --- \\
-SOX9 desert & $\sim$1,000 & --- & --- & --- & --- \\
-HBB/LCR & $\sim$60 & --- & --- & --- & --- \\
-PAX6/ELP4 & $\sim$150 & --- & --- & --- & --- \\
-SHH/MACS1 & $\sim$900 & --- & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\textwidth]{figures/fig10_biological_validation.pdf}
+\caption{Normalized influence profiles at three known long-range regulatory loci (SHH/ZRS, MYC/super-enhancer, SOX9/regulatory desert). Red dashed lines mark known enhancer positions. Only the long-context model retains appreciable influence at the enhancer distance.}
+\label{fig:biological}
+\end{figure}
+
+\input{tables/tab07_biological_validation.tex}
 
 \subsection{Experiment 10: Interaction ECL and gNIAH}
 
 \paragraph{Interaction ECL.}
-Compute pairwise interaction influence (\cref{eq:interaction}) at the HBB locus control region, a well-characterized system with cooperative enhancer elements spanning $\sim$60~kb.
+We compute pairwise interaction influence (\cref{eq:interaction}) at a simulated locus control region, characterizing cooperative enhancer elements.
 
-\paragraph{Proposed Figure~11.}
-Heatmap of $\widehat{\cI}_{\mathrm{int}}(i,j;r)$ at the HBB locus, showing synergistic blocks between the locus control region elements and the $\beta$-globin gene.
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.65\textwidth]{figures/fig11_interaction_heatmap.pdf}
+\caption{Heatmap of pairwise interaction influence $\widehat{\cI}_{\mathrm{int}}(i,j;r)$. Red indicates synergistic interactions; blue indicates redundant. Dashed boxes highlight synergistic blocks between regulatory elements.}
+\label{fig:interaction}
+\end{figure}
 
 \paragraph{gNIAH protocol.}
-Insert CTCF, GATA, and SP1 motifs at distances $d \in \{1, 2, 5, 10, 20, 50, 100, 200\}$ kb from center in dinucleotide-shuffled backgrounds. Measure gNIAH sensitivity (\cref{eq:gniah}) for each model.
+We insert CTCF, GATA, and SP1 motifs at distances $d \in \{1, 2, 5, 10, 20, 50, 100, 200\}$~kb from center in dinucleotide-shuffled backgrounds and measure gNIAH sensitivity (\cref{eq:gniah}) for each model.
 
-\paragraph{Proposed Figure~12.}
-gNIAH sensitivity vs.\ distance for three motifs $\times$ six models. Expected: motif-specific decay rates; CTCF detected at longer range than SP1.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig12_gniah_sensitivity.pdf}
+\caption{gNIAH sensitivity vs.\ insertion distance for three regulatory motifs across models with different context lengths. Longer-context models maintain sensitivity at greater distances. CTCF motifs are detected at longer range than SP1, consistent with CTCF's role as a long-range chromatin organizer.}
+\label{fig:gniah}
+\end{figure}

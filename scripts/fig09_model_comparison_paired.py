@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 9: Paired difference plot (Model A - Model B) of ECL_0.9 at matched loci.
+"""Figure 9: Paired difference plot (Enformer (syn.) - Borzoi (syn.)) of ECL_0.9 at matched loci.
 
 Shows the distribution of ECL_0.9 differences between two models at 500 matched
 loci, with kernel density, mean +/- 95% CI, and stratification by locus class.
@@ -26,8 +26,8 @@ def generate_paired_ecl(
 ) -> dict:
     """Generate paired ECL_0.9 values for two models at matched loci.
 
-    Model A has decay_length=100, Model B has decay_length=180, producing
-    a systematic positive shift in Model B's ECL values.
+    Enformer (syn.) has decay_length=100, Borzoi (syn.) has decay_length=180, producing
+    a systematic positive shift in Borzoi (syn.)'s ECL values.
     """
     rng = rng or np.random.default_rng(2024)
 
@@ -63,13 +63,13 @@ def generate_paired_ecl(
         cls = class_assignments[i]
         dm = class_decay_mods[cls]
 
-        # Model A influence profile
+        # Enformer (syn.) influence profile
         decay_a = model_a._decay_length * dm
         infl_a = np.exp(-distances / decay_a)
         infl_a += rng.exponential(scale=0.02, size=len(infl_a))
         ecl_a[i] = ECL(distances, np.maximum(infl_a, 0.0), beta=0.9)
 
-        # Model B influence profile
+        # Borzoi (syn.) influence profile
         decay_b = model_b._decay_length * dm
         infl_b = np.exp(-distances / decay_b)
         infl_b += rng.exponential(scale=0.02, size=len(infl_b))
@@ -112,7 +112,7 @@ def main() -> None:
         color="#C44E52",
         label=f"95% CI [{mean_diff - ci_hw:.1f}, {mean_diff + ci_hw:.1f}]",
     )
-    ax.set_xlabel(r"$\Delta$ECL$_{0.9}$ (Model A $-$ Model B)", fontsize=13)
+    ax.set_xlabel(r"$\Delta$ECL$_{0.9}$ (Enformer (syn.) $-$ Borzoi (syn.))", fontsize=13)
     ax.set_ylabel("Density", fontsize=13)
     ax.set_title(
         f"Paired Difference (N=500, permutation p={p_value:.4f})",
@@ -162,7 +162,7 @@ def main() -> None:
     ax2.invert_yaxis()
 
     fig.suptitle(
-        "Figure 9: Model Comparison -- Paired ECL$_{0.9}$ Differences",
+        "Model Comparison: Paired ECL$_{0.9}$ Differences",
         fontsize=14,
         fontweight="bold",
         y=1.02,

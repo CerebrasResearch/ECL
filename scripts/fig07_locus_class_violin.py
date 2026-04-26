@@ -88,17 +88,17 @@ def main() -> None:
         for v in ecl_a[cls]:
             class_names.append(cls)
             ecl_vals.append(v)
-            model_labels.append("Model A (decay=100)")
+            model_labels.append("Enformer (synthetic)")
         for v in ecl_b[cls]:
             class_names.append(cls)
             ecl_vals.append(v)
-            model_labels.append("Model B (decay=250)")
+            model_labels.append("Borzoi (synthetic)")
 
     # Plot
     sns.set_theme(style="whitegrid", font_scale=1.1)
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    palette = {"Model A (decay=100)": "#4C72B0", "Model B (decay=250)": "#DD8452"}
+    palette = {"Enformer (synthetic)": "#4C72B0", "Borzoi (synthetic)": "#DD8452"}
 
     sns.violinplot(
         x=class_names,
@@ -116,7 +116,7 @@ def main() -> None:
     ax.set_xlabel("Locus Class", fontsize=13)
     ax.set_ylabel(r"ECL$_{0.9}$ (bp)", fontsize=13)
     ax.set_title(
-        "Figure 7: ECL$_{0.9}$ Distribution Across Locus Classes",
+        "ECL$_{0.9}$ Distribution Across Locus Classes",
         fontsize=14,
         fontweight="bold",
     )

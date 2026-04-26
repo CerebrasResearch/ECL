@@ -23,6 +23,10 @@ MODEL_CONFIGS = {
     "Borzoi": {"seq_length": 2000, "decay_length": 600.0},
     "HyenaDNA": {"seq_length": 2000, "decay_length": 400.0},
     "Caduceus": {"seq_length": 2000, "decay_length": 250.0},
+    "DNABERT-2": {"seq_length": 1000, "decay_length": 120.0},
+    "Evo 2 (7B)": {"seq_length": 2000, "decay_length": 650.0},
+    "NT-v2": {"seq_length": 2000, "decay_length": 180.0},
+    "NT-v3": {"seq_length": 2000, "decay_length": 200.0},
 }
 
 PERTURBATION_TYPES = ["substitution", "shuffle", "markov", "generative"]

@@ -30,6 +30,10 @@ MODEL_CONFIGS = {
     "Borzoi": {"seq_length": 1000, "decay_length": 200.0},
     "HyenaDNA": {"seq_length": 1000, "decay_length": 80.0},
     "Caduceus": {"seq_length": 1000, "decay_length": 120.0},
+    "DNABERT-2": {"seq_length": 1000, "decay_length": 60.0},
+    "Evo 2 (7B)": {"seq_length": 1000, "decay_length": 220.0},
+    "NT-v2": {"seq_length": 1000, "decay_length": 90.0},
+    "NT-v3": {"seq_length": 1000, "decay_length": 100.0},
 }
 
 SEQ_LENGTH = 1000
@@ -50,10 +54,16 @@ def main():
 
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.1)
     n_models = len(MODEL_CONFIGS)
+    n_cols = 4
+    n_model_rows = (n_models + n_cols - 1) // n_cols
+    n_total_rows = n_model_rows * 2  # influence + BIC per row group
     fig, axes = plt.subplots(
-        2, n_models, figsize=(4 * n_models, 8), gridspec_kw={"height_ratios": [2, 1]}
+        n_total_rows,
+        n_cols,
+        figsize=(4 * n_cols, 4 * n_model_rows + 1),
+        gridspec_kw={"height_ratios": [2, 1] * n_model_rows},
     )
-    if n_models == 1:
+    if n_total_rows == 2 and n_cols == 1:
         axes = axes.reshape(2, 1)
 
     cds_summary = []
@@ -99,7 +109,9 @@ def main():
         )
 
         # Top panel: influence profile with CDS fit
-        ax_top = axes[0, idx]
+        row_group = idx // n_cols
+        col = idx % n_cols
+        ax_top = axes[row_group * 2, col]
         d_plot = distances[1:]
         ax_top.semilogy(d_plot, influence[1:], "k.", markersize=3, alpha=0.5, label="Data")
         ax_top.semilogy(
@@ -127,20 +139,22 @@ def main():
             fontsize=10,
             fontweight="bold",
         )
-        ax_top.set_ylabel(r"$\hat{I}(d; r)$") if idx == 0 else None
+        if col == 0:
+            ax_top.set_ylabel(r"$\hat{I}(d; r)$")
         ax_top.legend(fontsize=6, loc="upper right")
 
         # Bottom panel: BIC vs K
-        ax_bot = axes[1, idx]
+        ax_bot = axes[row_group * 2 + 1, col]
         bics = [f["bic"] for f in all_fits]
         ks = list(range(1, MAX_K + 1))
         ax_bot.bar(ks, bics, color=["#2ca02c" if k == best_K else "#cccccc" for k in ks])
         ax_bot.set_xlabel("K (components)")
-        ax_bot.set_ylabel("BIC") if idx == 0 else None
+        if col == 0:
+            ax_bot.set_ylabel("BIC")
         ax_bot.set_xticks(ks)
 
     fig.suptitle(
-        "Appendix: Context Decay Spectroscopy (CDS) Analysis",
+        "Context Decay Spectroscopy (CDS) Analysis",
         fontsize=14,
         fontweight="bold",
         y=0.98,

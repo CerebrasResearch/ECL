@@ -153,7 +153,7 @@ def main() -> None:
     )
 
     fig.suptitle(
-        "Figure 10: Influence Profiles at Known Long-Range Regulatory Loci",
+        "Influence Profiles at Known Long-Range Regulatory Loci",
         fontsize=14,
         fontweight="bold",
         y=1.02,
