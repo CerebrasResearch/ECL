@@ -7,13 +7,13 @@
 For a fixed position $i$, define $U_i := d_\cZ(f(X), f(X^{(i)}))$ so that $\cI(i;r)=\E[U_i]$ and $\widehat{\cI}(i;r)=\frac{1}{n}\sum_{t=1}^n U_i^{(t)}$.
 
 \begin{theorem}[Bernstein concentration]\label{thm:bernstein}
-Under \cref{ass:subgauss}, or alternatively assuming $0 \le U_i \le M$ almost surely with $\Var(U_i) = \sigma_i^2$, for any $\delta\in(0,1)$:
+Under \cref{ass:subgauss} (bounded influence variables: $0 \le U_i \le M$ a.s.\ with $\Var(U_i) = \sigma_i^2$), for any $\delta\in(0,1)$ and $t > 0$:
 \begin{equation}\label{eq:bernstein}
 \Pr\!\left(\abs{\widehat{\cI}(i;r)-\cI(i;r)} \ge t\right) \le 2\exp\!\left(-\frac{nt^2/2}{\sigma_i^2 + Mt/3}\right).
 \end{equation}
-Setting the right-hand side to $\delta$ and solving for $t$ yields the confidence radius
+Setting the right-hand side equal to $\delta$ and using the standard quadratic-bound argument yields the upper bound on the confidence radius
 \begin{equation}
-\varepsilon_n(\delta) = \frac{M\log(2/\delta)}{3n} + \sqrt{\frac{2\sigma_i^2 \log(2/\delta)}{n}}.
+\varepsilon_n(\delta) \;\le\; \frac{M\log(2/\delta)}{3n} + \sqrt{\frac{2\sigma_i^2 \log(2/\delta)}{n}}.
 \end{equation}
 \end{theorem}
 \begin{proof}
@@ -34,24 +34,28 @@ For each $\ell$, $|\widehat{\cI}_{\le \ell}(r)-\cI_{\le \ell}(r)| \le L \cdot \m
 \subsection{Sample complexity for ECL estimation}
 
 \begin{corollary}[Sample complexity]\label{cor:sample_complexity}
-To estimate $\ECL_\beta(r)$ exactly (i.e., $\widehat{\ECL}_\beta = \ECL_\beta$) with probability $\ge 1-\delta$, it suffices to use
+To estimate $\ECL_\beta(r)$ exactly (i.e., $\widehat{\ECL}_\beta = \ECL_\beta$) with probability $\ge 1-\delta$, the following sufficient sample sizes suffice. The Hoeffding-type bound, which holds without variance information, requires
 \begin{equation}\label{eq:sample_complexity}
-n \;\ge\; \frac{128\, L^2 M^2}{\gamma^2} \log\frac{2L}{\delta}
+n \;\ge\; \frac{128\, L^2 M^2}{\gamma^2}\,\log\!\frac{2L}{\delta}.
 \end{equation}
-Monte Carlo samples per position.
+The Bernstein-type bound, which exploits the typically small variance of influence variables, replaces $M^2$ with the data-dependent factor $\sigma_{\max}^2 + (\gamma/(3L))\,M$, where $\sigma_{\max}^2 := \max_i \sigma_i^2$:
+\begin{equation}\label{eq:sample_complexity_bern}
+n \;\ge\; \frac{C\, L^2 (\sigma_{\max}^2 + (\gamma/(3L))\,M)}{\gamma^2}\,\log\!\frac{2L}{\delta},
+\end{equation}
+for an absolute constant $C > 0$. The Bernstein bound is substantially tighter than the Hoeffding bound when $\sigma_{\max}^2 \ll M^2$, which is the typical regime since most positions have near-zero influence.
 \end{corollary}
 \begin{proof}
-Apply \cref{thm:bernstein} with a union bound over $L$ positions, requiring $\max_i |\widehat{\cI}(i;r) - \cI(i;r)| \le \gamma/(4L)$ with probability $\ge 1-\delta$. Each position requires $n$ satisfying $2\exp(-n\gamma^2/(32L^2 M^2)) \le \delta/L$.
+Apply \cref{thm:bernstein} with a union bound over $L$ positions, requiring $\max_i |\widehat{\cI}(i;r) - \cI(i;r)| \le \gamma/(4L)$ with probability $\ge 1-\delta$. Each position requires $n$ satisfying $2\exp(-n\gamma^2/(32L^2 M^2)) \le \delta/L$ for the Hoeffding bound, and the analogous Bernstein expression for the variance-adaptive bound.
 \end{proof}
 
 \subsection{Antithetic variance reduction}
 
 \begin{proposition}[Antithetic perturbation estimator]\label{prop:antithetic}
-For perturbation kernels admitting paired draws $(X^{(i,+)}, X^{(i,-)})$ such that $\Cov(d_\cZ(f(X),f(X^{(i,+)})),\, d_\cZ(f(X),f(X^{(i,-)}))) < 0$, the antithetic estimator
+For perturbation kernels admitting paired draws $(X^{(i,+)}, X^{(i,-)})$ with correlation $\rho := \mathrm{Corr}(d_\cZ(f(X),f(X^{(i,+)})),\, d_\cZ(f(X),f(X^{(i,-)})))$, the antithetic estimator
 \[
 \widehat{\cI}^{\mathrm{anti}}(i;r) := \frac{1}{2n}\sum_{t=1}^n \left[d_\cZ(f(X^{(t)}),f(X^{(t,i,+)})) + d_\cZ(f(X^{(t)}),f(X^{(t,i,-)}))\right]
 \]
-is unbiased with variance $\le \Var(\widehat{\cI}(i;r))$, achieving up to 2$\times$ variance reduction.
+is unbiased with variance $\Var(\widehat{\cI}^{\mathrm{anti}}(i;r)) = \tfrac{1}{2}(1+\rho)\,\Var(\widehat{\cI}(i;r))$. Variance reduction is achieved whenever $\rho < 1$, with maximal reduction $\Var(\widehat{\cI})/2$ at $\rho = -1$ (perfect anticorrelation) and no reduction at $\rho = 1$.
 \end{proposition}
 
 A practical construction for DNA: if the original perturbation replaces nucleotide $X_i$ with a specific alternative $a$, the antithetic partner replaces $X_i$ with the complementary nucleotide (A$\leftrightarrow$T, C$\leftrightarrow$G).
@@ -61,11 +65,11 @@ A practical construction for DNA: if the original perturbation replaces nucleoti
 Positions far from $r$ have small influence but there are many such positions. Naive uniform sampling wastes budget on uninformative positions. Let $q(i)$ be a proposal distribution over positions.
 
 \begin{proposition}[Importance-weighted influence estimator]\label{prop:importance}
-The importance-weighted estimator
+Let $\{i_t\}_{t=1}^n$ be sampled i.i.d.\ from a proposal distribution $q$ with full support on $\{1,\dots,L\}$. The per-sample importance-weighted estimator for the coordinate-$i$ influence is
 \[
-\widehat{\cI}^{\mathrm{IS}}(i;r) := \frac{\bar{\cI}_0(i;r)}{q(i)} \cdot \frac{1}{n}\sum_{t=1}^n d_\cZ(f(X^{(t)}), f(X^{(t,i)}))
+\widehat{\cI}^{\mathrm{IS}}(i;r) := \frac{1}{n} \sum_{t=1}^n \frac{\ind[i_t = i]}{q(i)} \cdot d_\cZ\!\left(f(X^{(t)}),\, f(X^{(t,i)})\right),
 \]
-where positions $i$ are sampled $\propto q(i)$, is unbiased for $\cI(i;r)$ when $q(i) \propto \bar{\cI}_0(i;r)$ is a pilot estimate. Optimal $q^\star(i) \propto \sigma_i \bar{\cI}_0(i;r)$ minimizes total variance.
+which is unbiased for $\cI(i;r)$ for any $q$ with $q(i) > 0$. The variance-optimal proposal among kernels of the form $q^\star(i) \propto w(i)$ is $q^\star(i) \propto \sigma_i\, \cI(i;r)$, leading to the standard practice of sampling positions in proportion to a pilot estimate $\bar{\cI}_0(i;r)$ of the influence and then refining with a second-stage estimate.
 \end{proposition}
 
 In practice, a coarse pilot run (\cref{alg:adaptive}, Phase~1) provides $\bar{\cI}_0$, and the refinement phase allocates samples according to $q^\star$.
@@ -73,7 +77,7 @@ In practice, a coarse pilot run (\cref{alg:adaptive}, Phase~1) provides $\bar{\c
 \subsection{Asymptotic normality}
 
 \begin{theorem}[CLT for influence estimators]\label{thm:clt}
-Under \cref{ass:meas} with $\Var(U_i) = \sigma_i^2 < \infty$,
+Under \cref{ass:meas} with $\Var(U_i) = \sigma_i^2 < \infty$, the Lindeberg--L\'evy CLT yields
 \[
 \sqrt{n}\,(\widehat{\cI}(i;r) - \cI(i;r)) \;\xrightarrow{d}\; \mathcal{N}(0,\, \sigma_i^2)
 \]

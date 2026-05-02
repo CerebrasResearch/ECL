@@ -24,7 +24,7 @@ Let $C_f(L)$ denote the cost of a single forward pass of model $f$ on a sequence
 \ref{alg:bootstrap}: Bootstrap & $B \times$ (recompute from stored) & $O(nDd)$ & No new forward passes \\
 \ref{alg:multiscale}: Multi-scale & $|\cB| \times n K_b$ & $O(K_b d)$ & $K_b = L/b$ blocks \\
 \ref{alg:compare}: Comparison & $2 \times N \times$ \ref{alg:binned} cost & $O(NDd)$ & Paired across $N$ loci \\
-\ref{alg:surrogate}: Surrogate & $M \times n$ & $O(Md)$ & $M \ll L$ sampled positions \\
+\ref{alg:surrogate}: Surrogate & $M \times n$ & $O(Md)$ & $M \ll L$ sampled positions; per-position cost may be amortized via fast ISM~\citep{Nair2022fastISM,Schreiber2022Yuzu} \\
 \ref{alg:adaptive}: Adaptive & $n_{\mathrm{tot}}(G + G')$ & $O(Gd)$ & Two-phase budget \\
 \bottomrule
 \end{tabular}
@@ -47,7 +47,7 @@ For Evo~2 (40B parameters, $\sim$10 seconds per forward pass), multiply all esti
 
 \subsection{Parallelization strategy}
 
-The main computational bottleneck---independent forward passes for different perturbations---is embarrassingly parallel. We recommend:
+The main computational bottleneck, the independent forward passes for different perturbations, is embarrassingly parallel. We recommend:
 \begin{enumerate}[leftmargin=2em, label=(\roman*)]
 \item \textbf{Data parallelism:} distribute sequences across GPUs.
 \item \textbf{Position parallelism:} for each sequence, perturbations at different positions can be batched.

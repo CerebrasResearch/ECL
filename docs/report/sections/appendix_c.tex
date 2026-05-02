@@ -27,7 +27,7 @@ Our perturbation-variance ECL is complementary:
 \item It operates at the embedding level (task-agnostic) or task-specific level.
 \item It is a continuous, fractional measure rather than binary.
 \item It provides statistical uncertainty quantification.
-\item It does not require carefully designed ``needles'' or ``tasks''---any perturbation kernel suffices.
+\item It does not require carefully designed ``needles'' or ``tasks''; any perturbation kernel suffices.
 \end{itemize}
 
 \subsection{LongPPL and key-token identification}
@@ -46,10 +46,10 @@ under a log-loss discrepancy. Key tokens are positions where $\Delta_{\mathrm{ou
 
 \subsection{Lost-in-the-middle as position-dependent ECL}
 
-The U-shaped performance curve in ``Lost in the Middle''~\citep{Liu2024LostInMiddle} can be interpreted as position-dependent influence energy. If we define a ``query position'' $r$ at the end of the sequence (where the model generates its answer), the influence profile $\cI(i;r)$ should ideally be uniform across $i$ (all context positions equally useful). The U-shape reveals $\cI(i;r)$ is high for $i$ near the beginning and end but low for $i$ in the middle---a form of position-dependent ECL degradation.
+The U-shaped performance curve in ``Lost in the Middle''~\citep{Liu2024LostInMiddle} can be interpreted as position-dependent influence energy. The analogy holds when $r$ is held at a fixed conventional location (e.g., the end of the sequence, where the model generates its answer) and $i$ ranges across context positions. The influence profile $\cI(i;r)$ then traces ``how useful is information at position $i$ for generating at position $r$,'' which recovers the ``position of the answer'' interpretation of \citet{Liu2024LostInMiddle} as an ECL phenomenon under a fixed query location. Under uniform context use we would expect $\cI(i;r)$ to be roughly flat across $i$; the empirical U-shape shows it high near both ends and low in the middle.
 
 In genomics, the analogue would be if models preferentially attend to positions near the edges of their input window while underweighting the center. This can be tested by plotting $\cI(d;r)$ for reference positions $r$ at various locations within the input window.
 
 \subsection{Intrinsic entropy and optimal context length}
 
-\citet{Shi2025Entropy} proved that an optimal context length $L^\star$ exists, beyond which additional context increases approximation loss. In our framework, this corresponds to the regime where $\cI(d;r) < 0$ (negative influence), meaning that additional context \emph{hurts} predictions. This can occur when out-of-distribution perturbations or distant noise degrades the model. Our framework can detect this by checking whether $\Delta_{\mathrm{out}}(\ell;r)$ is non-monotone in $\ell$: if $\Delta_{\mathrm{out}}$ \emph{decreases} as $\ell$ grows (removing more context improves predictions), the model suffers from context poisoning.
+\citet{Shi2025Entropy} proved that an optimal context length $L^\star$ exists, beyond which additional context increases approximation loss. In our framework, this corresponds to a regime where adding context positions \emph{worsens} downstream task loss, even though the (non-negative) influence energy $\cI(i;r) \ge 0$ remains well-defined for every position. The natural framing is task-aware: working with task-aware out-of-window ablation $\Delta_{\mathrm{out}}^{\mathrm{task}}(\ell;r)$ defined under a task discrepancy $d_{\mathrm{task}}$, ``context poisoning'' corresponds to $\Delta_{\mathrm{out}}^{\mathrm{task}}(\ell;r)$ \emph{decreasing} as $\ell$ grows, i.e., removing distal context improves predictions. Our framework can detect this directly by checking monotonicity of the task-aware ablation in $\ell$.

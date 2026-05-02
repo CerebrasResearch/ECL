@@ -4,6 +4,9 @@
 
 We present a comprehensive experimental program to estimate, compare, and validate ECL across genomic models and tasks. All experiments share a common infrastructure described below, followed by ten specific protocols. Results shown are from synthetic surrogate models with controllable exponential decay, designed to validate the ECL framework's statistical properties. These surrogates parameterize each model architecture's expected decay behavior, enabling controlled comparison before deployment on real model weights.
 
+\paragraph{Scope of the reported numbers.}
+The figures and tables in this section demonstrate the \emph{statistical workflow} of the framework on a controllable synthetic substrate; deploying the framework on real model weights is the empirical follow-up of this work and not the contribution of this manuscript. Specifically, all numerical values reported in \cref{tab:ecl_estimates,tab:utilization,tab:perturbation_sensitivity,tab:multiscale_block,tab:pairwise_comparison,tab:biological_validation} should be read as the output of the framework applied to surrogate decay profiles calibrated to each architecture's expected behavior, not as measurements obtained from the model weights themselves. We retain a single internally consistent scale across all experimental tables so that the cross-model comparisons exemplify the workflow without committing to specific empirical claims about the named models.
+
 \subsection{Models}\label{sec:exp_models}
 
 We evaluate eight models spanning distinct architectural families (\cref{tab:model_taxonomy}):
@@ -14,9 +17,7 @@ We evaluate eight models spanning distinct architectural families (\cref{tab:mod
 \textbf{DNABERT-2}~\citep{Zhou2023DNABERT2} (BERT with ALiBi, $\sim$3~kb),
 \textbf{Evo~2 (7B)}~\citep{Brixi2025Evo2} (StripedHyena + Transformer, 1~Mb),
 \textbf{Nucleotide Transformer v2-500M}~\citep{DallasTorre2024NT} (ESM/BERT, $\sim$12~kb),
-and \textbf{Nucleotide Transformer v3-650M} (ESM/BERT, $\sim$12~kb).
-
-\input{tables/tab01_model_taxonomy.tex}
+and \textbf{Nucleotide Transformer v3-650M} (ESM/BERT, $\sim$12~kb). The full taxonomy is given by \cref{tab:model_taxonomy} in \cref{sec:related}.
 
 \subsection{Datasets and loci}
 
@@ -33,7 +34,7 @@ We estimate the binned influence profile $\widehat{\cI}(d;r)$ for each model at 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig01_influence_profiles_promoter.pdf}
-\caption{Log-scale influence profiles $\widehat{\cI}(d;r)$ vs.\ distance $d$ (bp) for eight models, averaged over promoter-centered loci. Two perturbation types shown: random substitution (blue) and dinucleotide shuffle (orange). Shaded bands show $\pm$1~SE. Models with longer decay lengths show slower influence falloff.}
+\caption{Log-scale influence profiles $\widehat{\cI}(d;r)$ vs.\ distance $d$ (bp) for eight models (synthetic surrogates), averaged over promoter-centered loci. Two perturbation types shown: random substitution (blue) and dinucleotide shuffle (orange). Shaded bands show $\pm$1~SE. Models with longer decay lengths show slower influence falloff.}
 \label{fig:influence_promoter}
 \end{figure}
 
@@ -79,7 +80,7 @@ We compare ECL estimates across perturbation types for each model.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.7\textwidth]{figures/fig05_perturbation_scatter.pdf}
-\caption{Scatter plot of ECL$_{0.9}$(shuffle) vs.\ ECL$_{0.9}$(substitution) across 500 promoter loci, colored by model. Diamonds mark model means. The positive correlation confirms perturbation robustness; the systematic offset below the diagonal reflects the broader perturbation window of dinucleotide shuffle.}
+\caption{Scatter plot of ECL$_{0.9}$(shuffle) vs.\ ECL$_{0.9}$(substitution) across 500 promoter loci for eight models (synthetic surrogates), colored by model. Diamonds mark model means. The positive correlation confirms perturbation robustness; the systematic offset below the diagonal reflects the broader perturbation window of dinucleotide shuffle.}
 \label{fig:perturbation_scatter}
 \end{figure}
 
@@ -133,12 +134,12 @@ We conduct paired comparison of ECL across models at matched loci using the perm
 
 \subsection{Experiment 9: Biological validation}
 
-For known long-range enhancer--gene pairs, we check whether model ECL reaches the known regulatory distance.
+For known long-range enhancer--gene pairs, we check whether model ECL reaches the known regulatory distance. The two best-characterized long-range pairs in our list are SHH/ZRS~\citep{Karollus2023Limited} and HBB/LCR; the remaining locus pairs in \cref{tab:biological_validation} are reported with their commonly cited regulatory distances and serve as illustrative targets for the workflow rather than fully validated reference values, and a real-data deployment of this experiment should attach explicit citations or experimental measurements to each row.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig10_biological_validation.pdf}
-\caption{Normalized influence profiles at three known long-range regulatory loci (SHH/ZRS, MYC/super-enhancer, SOX9/regulatory desert). Red dashed lines mark known enhancer positions. Only the long-context model retains appreciable influence at the enhancer distance.}
+\caption{Normalized influence profiles at three known long-range regulatory loci (SHH/ZRS, MYC/super-enhancer, SOX9/regulatory desert) for synthetic surrogates parameterized to each model's decay behavior. Red dashed lines mark known enhancer positions. Only the long-context surrogate retains appreciable influence at the enhancer distance.}
 \label{fig:biological}
 \end{figure}
 
@@ -162,6 +163,6 @@ We insert CTCF, GATA, and SP1 motifs at distances $d \in \{1, 2, 5, 10, 20, 50, 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig12_gniah_sensitivity.pdf}
-\caption{gNIAH sensitivity vs.\ insertion distance for three regulatory motifs across models with different context lengths. Longer-context models maintain sensitivity at greater distances. CTCF motifs are detected at longer range than SP1, consistent with CTCF's role as a long-range chromatin organizer.}
+\caption{gNIAH sensitivity vs.\ insertion distance for three regulatory motifs across surrogates with different context lengths. Longer-context surrogates maintain sensitivity at greater distances. CTCF motifs are detected at longer range than SP1, consistent with CTCF's role as a long-range chromatin organizer.}
 \label{fig:gniah}
 \end{figure}

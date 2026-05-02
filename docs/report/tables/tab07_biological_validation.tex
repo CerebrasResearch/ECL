@@ -1,18 +1,19 @@
 \begin{table}[t]
 \centering
-\caption{Biological validation against known long-range interactions. ``Detected'' indicates whether $\mathrm{ECL}_{0.9}$ reaches $\geq 50\%$ of the known interaction distance.}
+\caption{Biological validation against known long-range interactions. ``Detected'' (Det?) indicates whether $\mathrm{ECL}_{0.9}$ reaches at least $50\%$ of the known interaction distance. Per-model $\mathrm{ECL}_{0.9}$ values are taken from \cref{tab:utilization} and converted to kb. Under the surrogate calibration of \cref{sec:experiments}, all reported model ECLs are well below $1$~kb, so none of the listed long-range interactions are detected; the table illustrates the workflow for surrogate inputs and serves as a template for real-data deployment, where rows should be backed by explicit experimental references.}
 \label{tab:biological_validation}
+\small
 \begin{tabular}{lrrcrcrcrcrc}
 \toprule
-Locus & Known (kb) & \multicolumn{2}{c}{Enformer} & \multicolumn{2}{c}{Borzoi} & \multicolumn{2}{c}{Evo 2 (7B)} & \multicolumn{2}{c}{NT-v2} & \multicolumn{2}{c}{NT-v3} \\
- & ECL (kb) & Det? & ECL (kb) & Det? & ECL (kb) & Det? & ECL (kb) & Det? & ECL (kb) & Det? \\
+Locus & Known & \multicolumn{2}{c}{Enformer} & \multicolumn{2}{c}{Borzoi} & \multicolumn{2}{c}{Evo 2 (7B)} & \multicolumn{2}{c}{NT-v2} & \multicolumn{2}{c}{NT-v3} \\
+ & (kb) & ECL (kb) & Det? & ECL (kb) & Det? & ECL (kb) & Det? & ECL (kb) & Det? & ECL (kb) & Det? \\
 \midrule
-SHH/ZRS & 1000 & 0.88 & No & 0.88 & No & 0.88 & No & 0.85 & No & 0.86 & No \\
-MYC enhancer & 1700 & 0.88 & No & 0.88 & No & 0.88 & No & 0.85 & No & 0.86 & No \\
-SOX9 desert & 1000 & 0.88 & No & 0.88 & No & 0.88 & No & 0.85 & No & 0.86 & No \\
-HBB/LCR & 60 & 0.88 & No & 0.88 & No & 0.88 & No & 0.85 & No & 0.86 & No \\
-PAX6/ELP4 & 150 & 0.88 & No & 0.88 & No & 0.88 & No & 0.85 & No & 0.86 & No \\
-SHH/MACS1 & 900 & 0.88 & No & 0.88 & No & 0.88 & No & 0.85 & No & 0.86 & No \\
+SHH/ZRS & 1000 & 0.44 & No & 0.44 & No & 0.44 & No & 0.40 & No & 0.41 & No \\
+MYC enhancer & 1700 & 0.44 & No & 0.44 & No & 0.44 & No & 0.40 & No & 0.41 & No \\
+SOX9 desert & 1000 & 0.44 & No & 0.44 & No & 0.44 & No & 0.40 & No & 0.41 & No \\
+HBB/LCR & 60 & 0.44 & No & 0.44 & No & 0.44 & No & 0.40 & No & 0.41 & No \\
+PAX6/ELP4 & 150 & 0.44 & No & 0.44 & No & 0.44 & No & 0.40 & No & 0.41 & No \\
+SHH/MACS1 & 900 & 0.44 & No & 0.44 & No & 0.44 & No & 0.40 & No & 0.41 & No \\
 \bottomrule
 \end{tabular}
 \end{table}

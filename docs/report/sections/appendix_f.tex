@@ -55,6 +55,14 @@ Fit the CDS model (\cref{def:cds}) with $K \in \{1,2,3,4\}$ components to each m
 \item Decay rates $\lambda_1 < \lambda_2 < \dots$ and amplitudes $a_k$.
 \item Interpretation: $\lambda_1$ (slowest decay) determines long-range ECL; $a_1/\sum a_k$ measures the fraction of influence from long-range processing.
 \end{enumerate}
+The mixture-of-exponentials model with non-negative amplitudes is non-identifiable when decay rates are close, since $a_k e^{-\lambda_k d} + a_{k+1} e^{-\lambda_{k+1} d} \approx (a_k + a_{k+1}) e^{-\lambda_k d}$ in that regime. We recommend enforcing identifiability by a minimum-separation constraint $\lambda_{k+1}/\lambda_k \ge \rho$ for some $\rho > 1$ (e.g., $\rho = 2$), reported alongside the fitted parameters.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figA1_cds_analysis.pdf}
+\caption{Context Decay Spectroscopy (CDS) analysis for eight models (synthetic surrogates). Top panels: log-scale influence profiles (black dots) with CDS fits (red lines) and individual exponential components (dashed). Bottom panels: BIC model selection over $K \in \{1,2,3,4\}$ components (green = selected). Models with longer decay lengths require fewer components; short-context models exhibit multi-scale decay structure.}
+\label{fig:cds_analysis}
+\end{figure}
 
 \subsection{ECL vs.\ model performance}
 
@@ -70,6 +78,13 @@ Expected: models with larger ECL at relevant loci achieve better long-range pred
 \subsection{ECD analysis}
 
 Report Effective Context Dimension distributions across models and locus classes. ECD reveals whether a model distributes influence broadly (high ECD, genuinely using many positions) or concentrates on a few key positions (low ECD).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figA2_ecd_analysis.pdf}
+\caption{Effective Context Dimension (ECD) distributions. (A)~ECD by model, aggregated across locus classes. Longer-context models (Evo~2, Borzoi) exhibit higher ECD. (B)~ECD by locus class, aggregated across models. Enhancer and promoter loci show higher ECD than intergenic regions, consistent with their richer regulatory context.}
+\label{fig:ecd_analysis}
+\end{figure}
 
 \subsection{Positional bias analysis}
 

@@ -12,14 +12,14 @@ See \cref{app:proofs}.
 \end{proof}
 
 \begin{proposition}[Invariance under isometries]\label{prop:isometry}
-Assume $d_\cZ(z,z')=\norm{z-z'}_2^2$. If $T:\bbR^d\to\bbR^d$ is an orthogonal transformation, then $\ECL_\beta(r)$ is identical for $f$ and $T\circ f$.
+Assume $d_\cZ(z,z')=\norm{z-z'}_2^2$. If $T:\bbR^d\to\bbR^d$ is a linear isometry (i.e., $T^\top T = I$), then $\ECL_\beta(r)$ is identical for $f$ and $T\circ f$.
 \end{proposition}
 \begin{proof}
-Orthogonality preserves Euclidean distances: $\norm{Tz-Tz'}_2^2 = \norm{z-z'}_2^2$. All influence energies and their cumulative sums are unchanged.
+A linear isometry preserves Euclidean distances: $\norm{Tz-Tz'}_2^2 = \norm{z-z'}_2^2$. All influence energies and their cumulative sums are unchanged.
 \end{proof}
 
 \begin{remark}[Invariance under general linear maps via whitening]
-If $T$ is invertible but not orthogonal, Euclidean distances change. Using Mahalanobis distance $d_\Sigma$ with $\Sigma = \Cov(f(X))$ restores invariance under invertible linear transforms, since whitened embeddings $\Sigma^{-1/2}(f(X)-\E[f(X)])$ have identity covariance.
+If $T$ is invertible but not an isometry, Euclidean distances change. Provided $\Sigma := \Cov(f(X))$ is positive definite (i.e., $f(X)$ has full-rank covariance), using Mahalanobis distance $d_\Sigma$ restores invariance under invertible linear transforms, since whitened embeddings $\Sigma^{-1/2}(f(X)-\E[f(X)])$ have identity covariance.
 \end{remark}
 
 \subsection{ECL under exponential influence decay}\label{sec:exp_decay}
@@ -53,26 +53,34 @@ If $|i-r|>R^\star$, then perturbing coordinate $i$ leaves $W_{R^\star}(r)$ uncha
 \end{proof}
 
 \begin{proposition}[Compositional ECL bound]\label{prop:composition}
-For an architecture $f = g \circ h$ where $h:\cX \to \cH$ has exact receptive field $R_h$ per position and $g:\cH \to \cZ$ has exact receptive field $R_g$ per position (in the intermediate representation), then $\ECL_\beta(r) \le R_h \cdot R_g$.
+For an architecture $f = g \circ h$ where $h:\cX \to \cH$ has exact receptive field $R_h$ per position and $g:\cH \to \cZ$ has exact receptive field $R_g$ per position (in the intermediate representation), then $\ECL_\beta(r) \le R_h + R_g$.
 \end{proposition}
 \begin{proof}
-Position $r$ in the output depends on intermediate positions within radius $R_g$, each of which depends on input positions within radius $R_h$. By triangle inequality on index distances, the total input dependence radius is at most $R_h \cdot R_g$.
+See \cref{app:proofs}.
 \end{proof}
 
-\begin{remark}[Dilated convolutions]
-For a stack of $D$ dilated convolutional layers with kernel size $k$ and dilation rates $d_1, \dots, d_D$, the theoretical receptive field is $R^\star = \sum_{l=1}^D (k-1) d_l$. For Basenji's architecture with exponentially increasing dilations, $R^\star = O(k \cdot 2^D)$.
+\begin{remark}[Strided and dilated stacks]
+For a stack of $D$ convolutional layers with kernel sizes $k_l$ and strides $s_l$, the theoretical receptive field is $R^\star = 1 + \sum_{l=1}^D (k_l - 1) \prod_{m<l} s_m$. For a stack of $D$ dilated convolutional layers with constant kernel size $k$ and dilation rates $d_1, \dots, d_D$ (all strides equal to one), the receptive field reduces to $R^\star = 1 + \sum_{l=1}^D (k-1) d_l$. For Basenji's architecture with exponentially increasing dilations, $R^\star = O(k \cdot 2^D)$.
 \end{remark}
 
 \subsection{Variance-based sensitivity and Sobol connections}\label{sec:sobol}
 
 We relate perturbation ECL to classical variance decompositions. Let $\varphi:\cZ\to \bbR$ be a scalar summary of embeddings and $Y:=\varphi(f(X))$.
 
-\begin{theorem}[Perturbation influence equals twice Sobol total-effect variance (additive case)]\label{thm:sobol_equiv}
-Assume (i) $f(X) = \sum_{i=1}^L g_i(X_i)$ (additive model), (ii) coordinates $\{X_i\}$ are independent under $P_X$, (iii) perturbation replaces $X_i$ with an independent copy $X_i' \sim P_i$, and (iv) $d_\cZ = \norm{\cdot}_2^2$. Then for any scalar projection $\varphi:\cZ \to \bbR$ with $Y = \varphi(f(X))$:
+\begin{theorem}[Perturbation influence and Sobol total-effect index, additive case]\label{thm:sobol_equiv}
+Assume (i) $f(X) = \sum_{i=1}^L g_i(X_i)$ (additive vector model in $\cZ = \bbR^d$), (ii) coordinates $\{X_i\}$ are independent under $P_X$, (iii) perturbation replaces $X_i$ with an independent copy $X_i' \sim P_i$, and (iv) $d_\cZ = \norm{\cdot}_2^2$. Then:
+\begin{enumerate}[leftmargin=2em, label=(\alph*)]
+\item (Vector identity.) The single-site influence energy equals twice the trace of the per-coordinate component covariance:
 \[
-\cI(i;r) \;=\; 2\,\Var(g_i(X_i)) \;=\; 2\,V_{\mathrm{tot}} \cdot S_i^T,
+\cI(i;r) \;=\; 2\,\mathrm{tr}\!\big(\Cov(g_i(X_i))\big).
 \]
-where $S_i^T$ is the Sobol total-effect index and $V_{\mathrm{tot}} = \Var(Y)$.
+Defining a vector total-effect index $S_i^{T,\mathrm{vec}} := \mathrm{tr}(\Cov(g_i(X_i)))/V_{\mathrm{tot}}^{\mathrm{vec}}$ with $V_{\mathrm{tot}}^{\mathrm{vec}} := \mathrm{tr}(\Cov(f(X)))$, we have $\cI(i;r) = 2\,V_{\mathrm{tot}}^{\mathrm{vec}}\, S_i^{T,\mathrm{vec}}$.
+\item (Scalar projection.) For any scalar projection $\varphi:\cZ\to\bbR$ with $Y := \varphi(f(X))$ and $V_{\mathrm{tot}} := \Var(Y)$, the projected single-site influence $\cI^{\varphi}(i;r) := \E[(Y - \varphi(f(X^{(i)})))^2]$ satisfies
+\[
+\cI^{\varphi}(i;r) \;=\; 2\,\Var(\varphi(g_i(X_i))) \;=\; 2\,V_{\mathrm{tot}}\, S_i^T,
+\]
+where $S_i^T$ is the classical Sobol total-effect index for coordinate $i$ of $Y$.
+\end{enumerate}
 \end{theorem}
 \begin{proof}
 See \cref{app:additive}.
@@ -97,6 +105,8 @@ See \cref{app:additive}.
 \end{proof}
 
 \subsection{Effective receptive field: a linearized derivation}\label{sec:erf}
+
+This subsection records the linear-regime sanity check that the perturbation-variance ECL recovers the squared-impulse-response intuition of effective receptive field theory~\citep{Luo2016EffectiveRF}: in the locally linear case, our influence profile reduces to the squared impulse response, recovering the classical ERF as a special case.
 
 Consider a locally linear model $y_r = \sum_i h_{r-i}\, u_i$ with impulse response $h$.
 
@@ -124,7 +134,7 @@ Direct consequence of Blackwell's comparison theorem~\citep{Blackwell1951Compari
 \end{proof}
 
 \begin{proposition}[ECL ordering does not imply Blackwell dominance]\label{prop:ecl_not_blackwell}
-There exist models $f,g$ with $\ECL_\beta(f) < \ECL_\beta(g)$ for all $\beta$ yet neither Blackwell-dominates the other.
+There exist models $f,g$ with $\ECL_\beta(f,r) < \ECL_\beta(g,r)$ for all $\beta$ yet neither Blackwell-dominates the other.
 \end{proposition}
 \begin{proof}
 See \cref{app:proofs} for an explicit counterexample.
@@ -137,21 +147,25 @@ If $f$ Blackwell-dominates $g$ at every radius $\ell \le \ell_0$, then $\cR_f(\e
 \subsection{Invariance under sufficient statistics}
 
 \begin{theorem}[ECL invariance under sufficient statistics]\label{thm:sufficient}
-Let $g:\cZ\to\cY_{\mathrm{task}}$ be a downstream predictor and $T:\cZ \to \cZ'$ a sufficient statistic for $Y$ given $Z = f(X)$. Then $\ECL^{\mathrm{task}}_\beta(r)$ computed using the composition $g \circ f$ equals $\ECL^{\mathrm{task}}_\beta(r)$ computed using $g \circ T \circ f$.
+Let $g:\cZ\to\cY_{\mathrm{task}}$ be a downstream predictor and $T:\cZ \to \cZ'$ a sufficient statistic for the conditional family $\{P(Y\mid Z = z)\}_{z\in\cZ}$ associated with a fixed task. Then $\ECL^{\mathrm{task}}_\beta(r)$ computed using the composition $g \circ f$ equals $\ECL^{\mathrm{task}}_\beta(r)$ computed using $g \circ T \circ f$.
 \end{theorem}
 \begin{proof}
 Sufficiency implies $P(Y \mid Z) = P(Y \mid T(Z))$, so any decision rule based on $Z$ achieves the same Bayes risk as one based on $T(Z)$. The task-aware influence energies are therefore identical.
 \end{proof}
 
-\subsection{Minimax estimation rate}
+\subsection{Sample-complexity lower bound}
 
-\begin{theorem}[Minimax rate for ECL estimation]\label{thm:minimax}
-Let $\cF_M$ be the class of models with influence variables $U_i$ bounded in $[0,M]$, and consider estimating $\ECL_\beta(r)$ from $n$ i.i.d.\ sequence-perturbation pairs. Then
+\begin{theorem}[Sample-complexity lower bound for ECL identification]\label{thm:minimax}
+Let $\cF_M$ be the class of models with influence variables $U_i$ bounded in $[0,M]$, and consider estimating $\ECL_\beta(r)$ from $n$ i.i.d.\ sequence-perturbation pairs. Then there exist two models $f_0, f_1 \in \cF_M$ with $\ECL_\beta(f_0) \neq \ECL_\beta(f_1)$ and margin $\gamma := \min_{\ell\neq \ECL_\beta(r)}\abs{\cI_{\le \ell}(r) - \beta\,\cI_{\mathrm{tot}}(r)}$ such that any estimator $\hat{\ell}$ achieving
 \[
-\inf_{\hat{\ell}} \sup_{f \in \cF_M} \E\!\left[(\hat{\ell} - \ECL_\beta(r))^2\right] \;=\; \Omega\!\left(\frac{M^2}{\gamma^2 n}\right),
+\max_{j\in\{0,1\}}\Pr_{f_j}\!\left(\hat{\ell} \neq \ECL_\beta(f_j)\right) \;\le\; \tfrac{1}{3}
 \]
-where $\gamma$ is the margin at the threshold crossing. The Monte Carlo estimator (\cref{alg:mc_ecl}) achieves this rate up to logarithmic factors.
+requires
+\[
+n \;\ge\; c\,\frac{M^2}{\gamma^2}
+\]
+for an absolute constant $c > 0$. The Monte Carlo estimator described in \cref{sec:algorithms} (\cref{alg:mc_ecl}) attains the matching upper bound on $n$, up to logarithmic factors in $L$ and $1/\delta$, via \cref{cor:sample_complexity}.
 \end{theorem}
 \begin{proof}
-See \cref{app:proofs}. The lower bound follows from a two-point testing argument; the upper bound from \cref{thm:ecl_stability} combined with Hoeffding concentration.
+See \cref{app:proofs}. The lower bound follows from a Le Cam two-point construction; the matching upper bound combines \cref{thm:ecl_stability} with Bernstein concentration.
 \end{proof}

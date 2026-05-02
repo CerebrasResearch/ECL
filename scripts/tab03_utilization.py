@@ -1,7 +1,8 @@
 """Table 3: Context utilization ratio ECL_0.9 / Nominal for each model.
 
-Uses SyntheticModel with different decay lengths to compute ECL_0.9 and
-compare against the nominal context window.
+Derives ECL_0.9 as the locus-class average from the same computation
+pipeline as tab02 (shared model configs and locus-class modifiers),
+ensuring internal consistency across all experiment tables.
 """
 
 import sys
@@ -13,34 +14,34 @@ import csv
 
 import numpy as np
 
-from ecl.ecl import ECL
+from ecl.estimation import bootstrap_ecl_ci
 from ecl.models.base import SyntheticModel
 
-# Paper's 6 models: (name, nominal_bp, seq_length_for_sim, decay_length)
-# We use smaller seq_length for simulation but report the real nominal context.
-MODEL_CONFIGS = [
-    ("Enformer", 196608, 2000, 500.0),
-    ("Borzoi", 524288, 2000, 600.0),
-    ("HyenaDNA", 1000000, 2000, 400.0),
-    ("Caduceus", 131072, 2000, 250.0),
-    ("DNABERT-2", 3000, 2000, 120.0),
-    ("Evo 2 (7B)", 1000000, 2000, 650.0),
-    ("NT-v2", 12282, 2000, 180.0),
-    ("NT-v3", 12282, 2000, 200.0),
-]
+# Same configs as tab02 for consistency
+MODEL_CONFIGS = {
+    "Enformer": {"seq_length": 2000, "decay_length": 500.0, "nominal": 196608},
+    "Borzoi": {"seq_length": 2000, "decay_length": 600.0, "nominal": 524288},
+    "HyenaDNA": {"seq_length": 2000, "decay_length": 400.0, "nominal": 1000000},
+    "Caduceus": {"seq_length": 2000, "decay_length": 250.0, "nominal": 131072},
+    "DNABERT-2": {"seq_length": 1000, "decay_length": 120.0, "nominal": 3000},
+    "Evo 2 (7B)": {"seq_length": 2000, "decay_length": 650.0, "nominal": 1000000},
+    "NT-v2": {"seq_length": 2000, "decay_length": 180.0, "nominal": 12282},
+    "NT-v3": {"seq_length": 2000, "decay_length": 200.0, "nominal": 12282},
+}
 
-N_SAMPLES = 30
+LOCUS_CLASSES = {"Promoter": 1.0, "Enhancer": 1.15, "Intronic": 0.7}
+N_SAMPLES = 20
 
 
-def _compute_ecl_09(model: SyntheticModel, n_samples: int, rng: np.random.Generator) -> float:
-    """Compute ECL_0.9 for a synthetic model."""
+def _generate_influence_samples(model, n_samples, rng):
+    """Run influence profile for multiple random sequences."""
     L = model.nominal_context
     ref = L // 2
-    max_dist = L // 2
+    max_dist = min(L // 2, 500)
 
     sequences = rng.integers(0, 4, size=(n_samples, L))
     distances = np.arange(max_dist + 1)
-    influence = np.zeros(max_dist + 1)
+    samples = np.zeros((n_samples, max_dist + 1))
 
     for t in range(n_samples):
         seq = sequences[t]
@@ -60,10 +61,9 @@ def _compute_ecl_09(model: SyntheticModel, n_samples: int, rng: np.random.Genera
                 z_pert = model(perturbed)
                 diff = z_orig - z_pert
                 total += float(np.sum(diff * diff))
-            influence[d] += total / len(positions)
+            samples[t, d] = total / len(positions)
 
-    influence /= n_samples
-    return float(ECL(distances, influence, beta=0.9))
+    return distances, samples
 
 
 def main() -> None:
@@ -72,16 +72,29 @@ def main() -> None:
     rng = np.random.default_rng(42)
 
     rows = []
-    for model_name, nominal_bp, seq_len, decay in MODEL_CONFIGS:
-        model = SyntheticModel(
-            seq_length=seq_len,
-            embed_dim=32,
-            decay_length=decay,
-            noise_std=0.001,
-        )
-        ecl_09 = _compute_ecl_09(model, N_SAMPLES, rng)
-        utilization = ecl_09 / nominal_bp * 100.0
-        rows.append((model_name, nominal_bp, ecl_09, utilization))
+    for model_name, cfg in MODEL_CONFIGS.items():
+        ecl_per_class = []
+        for _locus_class, modifier in LOCUS_CLASSES.items():
+            model = SyntheticModel(
+                seq_length=cfg["seq_length"],
+                embed_dim=32,
+                decay_length=cfg["decay_length"] * modifier,
+                noise_std=0.001,
+            )
+            distances, influence_samples = _generate_influence_samples(model, N_SAMPLES, rng)
+            ecl_point, _, _ = bootstrap_ecl_ci(
+                influence_samples,
+                distances,
+                beta=0.9,
+                n_bootstrap=200,
+                alpha=0.05,
+                rng=rng,
+            )
+            ecl_per_class.append(ecl_point)
+        avg_ecl = float(np.mean(ecl_per_class))
+        nominal_bp = cfg["nominal"]
+        utilization = avg_ecl / nominal_bp * 100.0
+        rows.append((model_name, nominal_bp, avg_ecl, utilization))
 
     # --- CSV ---
     csv_path = output_dir / "tab03_utilization.csv"
@@ -96,7 +109,9 @@ def main() -> None:
     lines.append(r"\begin{table}[t]")
     lines.append(r"\centering")
     lines.append(
-        r"\caption{Context utilization ratio $\mathrm{ECL}_{0.9} / \text{Nominal}$ for each model.}"
+        r"\caption{Context utilization ratio $\mathrm{ECL}_{0.9} / \text{Nominal}$ for each model. "
+        r"The $\mathrm{ECL}_{0.9}$ value reported here is the locus-class average across "
+        r"promoter, enhancer, and intronic loci from \cref{tab:ecl_estimates}.}"
     )
     lines.append(r"\label{tab:utilization}")
     lines.append(r"\begin{tabular}{lrrr}")

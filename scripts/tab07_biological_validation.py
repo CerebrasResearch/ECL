@@ -1,7 +1,9 @@
 """Table 7: Biological validation against known long-range interactions.
 
-Columns: Locus, Known dist (kb), model ECL values, Detected?.
-Uses SyntheticModel with varying decay lengths to simulate different models.
+Derives per-model ECL_0.9 from the locus-class averages (same as tab03)
+and compares against known regulatory interaction distances. Under
+surrogate calibration, all model ECLs are sub-1 kb, so none detect the
+listed long-range interactions; the table serves as a workflow template.
 """
 
 import sys
@@ -13,7 +15,7 @@ import csv
 
 import numpy as np
 
-from ecl.ecl import ECL
+from ecl.estimation import bootstrap_ecl_ci
 from ecl.models.base import SyntheticModel
 
 # Known long-range regulatory interactions
@@ -26,38 +28,31 @@ KNOWN_LOCI = [
     ("SHH/MACS1", 900),
 ]
 
-# Paper's 3 models for biological validation (Section 11.9): Enformer, Borzoi, Evo 2
-MODEL_LIST = [
-    ("Enformer", 500.0, 2000),
-    ("Borzoi", 600.0, 2000),
-    ("Evo 2 (7B)", 650.0, 2000),
-    ("NT-v2", 180.0, 2000),
-    ("NT-v3", 200.0, 2000),
-]
+# Models for biological validation (subset of tab02 configs)
+MODEL_CONFIGS = {
+    "Enformer": {"seq_length": 2000, "decay_length": 500.0},
+    "Borzoi": {"seq_length": 2000, "decay_length": 600.0},
+    "Evo 2 (7B)": {"seq_length": 2000, "decay_length": 650.0},
+    "NT-v2": {"seq_length": 2000, "decay_length": 180.0},
+    "NT-v3": {"seq_length": 2000, "decay_length": 200.0},
+}
 
+LOCUS_CLASSES = {"Promoter": 1.0, "Enhancer": 1.15, "Intronic": 0.7}
 N_SAMPLES = 20
 
 
-def _compute_ecl_09(
-    decay_length: float,
-    seq_length: int,
-    rng: np.random.Generator,
-) -> float:
-    """Compute ECL_0.9 for a given decay/seq configuration."""
-    model = SyntheticModel(
-        seq_length=seq_length,
-        embed_dim=32,
-        decay_length=decay_length,
-        noise_std=0.001,
-    )
+def _generate_influence_samples(model, n_samples, rng):
+    """Run influence profile for multiple random sequences."""
     L = model.nominal_context
     ref = L // 2
-    max_dist = L // 2
-    distances = np.arange(max_dist + 1)
-    influence = np.zeros(max_dist + 1)
+    max_dist = min(L // 2, 500)
 
-    for _ in range(N_SAMPLES):
-        seq = rng.integers(0, 4, size=L)
+    sequences = rng.integers(0, 4, size=(n_samples, L))
+    distances = np.arange(max_dist + 1)
+    samples = np.zeros((n_samples, max_dist + 1))
+
+    for t in range(n_samples):
+        seq = sequences[t]
         z_orig = model(seq)
         for d in range(max_dist + 1):
             positions = []
@@ -74,10 +69,9 @@ def _compute_ecl_09(
                 z_pert = model(perturbed)
                 diff = z_orig - z_pert
                 total += float(np.sum(diff * diff))
-            influence[d] += total / len(positions)
+            samples[t, d] = total / len(positions)
 
-    influence /= N_SAMPLES
-    return float(ECL(distances, influence, beta=0.9))
+    return distances, samples
 
 
 def main() -> None:
@@ -85,26 +79,42 @@ def main() -> None:
 
     rng = np.random.default_rng(42)
 
-    # Compute ECL_0.9 for each model
-    model_ecl = {}
-    for model_name, decay, seq_len in MODEL_LIST:
-        print(f"  Computing ECL_0.9 for {model_name}...")
-        ecl_val = _compute_ecl_09(decay, seq_len, rng)
-        # Scale to kb for comparison with known distances
-        model_ecl[model_name] = ecl_val / 1000.0  # convert bp -> kb
+    # Compute locus-class average ECL_0.9 for each model (same pipeline as tab03)
+    model_ecl_kb = {}
+    for model_name, cfg in MODEL_CONFIGS.items():
+        ecl_per_class = []
+        for locus_class, modifier in LOCUS_CLASSES.items():
+            model = SyntheticModel(
+                seq_length=cfg["seq_length"],
+                embed_dim=32,
+                decay_length=cfg["decay_length"] * modifier,
+                noise_std=0.001,
+            )
+            print(f"  Computing ECL_0.9 for {model_name} / {locus_class}...")
+            distances, influence_samples = _generate_influence_samples(model, N_SAMPLES, rng)
+            ecl_point, _, _ = bootstrap_ecl_ci(
+                influence_samples,
+                distances,
+                beta=0.9,
+                n_bootstrap=200,
+                alpha=0.05,
+                rng=rng,
+            )
+            ecl_per_class.append(ecl_point)
+        model_ecl_kb[model_name] = float(np.mean(ecl_per_class)) / 1000.0  # bp -> kb
+
+    model_names = list(MODEL_CONFIGS.keys())
 
     # Build table rows
     rows = []
     for locus_name, known_dist_kb in KNOWN_LOCI:
         row = {"Locus": locus_name, "Known dist (kb)": known_dist_kb}
-        for model_name, _, _ in MODEL_LIST:
-            ecl_kb = model_ecl[model_name]
+        for mn in model_names:
+            ecl_kb = model_ecl_kb[mn]
             detected = "Yes" if ecl_kb >= known_dist_kb * 0.5 else "No"
-            row[model_name] = ecl_kb
-            row[f"{model_name}_detected"] = detected
+            row[mn] = ecl_kb
+            row[f"{mn}_detected"] = detected
         rows.append(row)
-
-    model_names = [m[0] for m in MODEL_LIST]
 
     # --- CSV ---
     csv_path = output_dir / "tab07_biological_validation.csv"
@@ -127,23 +137,24 @@ def main() -> None:
     lines.append(r"\centering")
     lines.append(
         r"\caption{Biological validation against known long-range interactions. "
-        r"``Detected'' indicates whether $\mathrm{ECL}_{0.9}$ reaches $\geq 50\%$ "
-        r"of the known interaction distance.}"
+        r"``Detected'' (Det?) indicates whether $\mathrm{ECL}_{0.9}$ reaches at least "
+        r"$50\%$ of the known interaction distance. Per-model $\mathrm{ECL}_{0.9}$ values "
+        r"are taken from \cref{tab:utilization} and converted to kb. Under the surrogate "
+        r"calibration of \cref{sec:experiments}, all reported model ECLs are well below "
+        r"$1$~kb, so none of the listed long-range interactions are detected; the table "
+        r"illustrates the workflow for surrogate inputs and serves as a template for "
+        r"real-data deployment, where rows should be backed by explicit experimental "
+        r"references.}"
     )
     lines.append(r"\label{tab:biological_validation}")
+    lines.append(r"\small")
     col_spec = "lr" + "rc" * n_models
     lines.append(r"\begin{tabular}{" + col_spec + r"}")
     lines.append(r"\toprule")
-    # Multi-row header
-    model_header_parts = []
-    for mn in model_names:
-        model_header_parts.append(r"\multicolumn{2}{c}{" + mn + r"}")
-    lines.append(r"Locus & Known (kb) & " + " & ".join(model_header_parts) + r" \\")
-    sub_header = r" & "
-    sub_parts = []
-    for _ in model_names:
-        sub_parts.append(r"ECL (kb) & Det?")
-    lines.append(sub_header + " & ".join(sub_parts) + r" \\")
+    model_header_parts = [r"\multicolumn{2}{c}{" + mn + r"}" for mn in model_names]
+    lines.append(r"Locus & Known & " + " & ".join(model_header_parts) + r" \\")
+    sub_parts = [r"ECL (kb) & Det?"] * n_models
+    lines.append(r" & (kb) & " + " & ".join(sub_parts) + r" \\")
     lines.append(r"\midrule")
     for row in rows:
         cells = [row["Locus"], str(row["Known dist (kb)"])]

@@ -21,7 +21,7 @@ When models have different nominal input lengths ($L_f \neq L_g$), comparisons r
 
 \subsection{Multi-track ECL for functional genomics models}
 
-Models like Enformer and Borzoi predict thousands of output tracks simultaneously. Define per-track influence $\cI^{(t)}(i;r) := \E[|f^{(t)}(X) - f^{(t)}(X^{(i)})|^2]$ for track $t$, yielding per-track ECL. The aggregated ECL uses $d_\cZ(z,z') = \sum_t w_t |z^{(t)} - z'^{(t)}|^2$ with track weights $w_t$.
+Models like Enformer and Borzoi predict thousands of output tracks simultaneously. Define per-track influence $\cI^{(t)}(i;r) := \E[|f^{(t)}(X) - f^{(t)}(X^{(i)})|^2]$ for track $t$, yielding per-track ECL. The aggregated ECL uses $d_\cZ(z,z') = \sum_t w_t |z^{(t)} - z'^{(t)}|^2$ with track weights $w_t$. A natural choice is $w_t = 1/\Var(f^{(t)}(X))$, which equalizes per-track contributions and corresponds to applying the diagonal Mahalanobis metric over tracks (\cref{sec:extensions} subsection on whitened metrics).
 
 Track-specific ECL can reveal that a model uses long-range context for some assays (e.g., CAGE, capturing enhancer-mediated expression) but not others (e.g., H3K4me3, primarily promoter-proximal).
 
@@ -34,7 +34,8 @@ We propose tracking ECL during model training as a diagnostic:
 \item \textbf{Hypothesis:} ECL grows during training as the model progressively learns to integrate distal context. If ECL saturates before loss saturates, the model has learned its context utilization early and subsequent training refines local features.
 \item If ECL grows monotonically with training, longer training curricula or progressive context extension may be beneficial.
 \end{enumerate}
+The hypothesis is falsified if, on a given dataset and architecture, $\widehat{\ECL}_{0.9}(r)$ is non-monotone in training step at fixed $r$ across multiple loci, indicating that context utilization is not a strictly additive function of training compute.
 
 \subsection{Cross-model ECL transfer validation}
 
-Given model $f$ with estimated $\ECL^f_{0.9}$, train a context-limited version $f_\ell$ using only $\ell = \ECL^f_{0.9}$ base pairs of context. If $f_\ell$ matches $f$'s downstream performance, the ECL estimate is validated: the model genuinely uses no more than $\ell$ base pairs of context. If $f_\ell$ underperforms, ECL was underestimated (interaction effects or higher-order dependencies matter beyond what single-site perturbations capture).
+Given model $f$ with estimated $\ECL^f_{0.9}$, train a context-limited version $f_\ell$ using only $\ell = \ECL^f_{0.9}$ base pairs of context. If $f_\ell$ matches $f$'s downstream performance, the ECL estimate is validated: the model genuinely uses no more than $\ell$ base pairs of context. If $f_\ell$ underperforms, ECL was underestimated (interaction effects or higher-order dependencies matter beyond what single-site perturbations capture). The framework is falsified if $f_\ell$ exceeds $f$'s held-out performance, which would indicate that the long-context training was actively harmful and that the perturbation-variance ECL is a strict lower bound on the useful context budget rather than a tight one.

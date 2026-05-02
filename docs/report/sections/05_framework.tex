@@ -66,12 +66,16 @@ The \emph{area under the effective context profile} is
 $\AECP(r) = \sum_{i=1}^L |i-r| \cdot \bar{\cI}(i;r)$.
 \end{proposition}
 \begin{proof}
-By a standard quantile identity, $\int_0^1 Q(\beta)\,d\beta = \E[D]$ where $Q$ is the quantile function and $D$ has CDF $F(d) = \cI_{\le d}(r)/\cI_{\mathrm{tot}}(r)$. The random variable $D$ has distribution $\bar{\cI}$ over distances, yielding the stated expectation.
+Let $D$ denote the random distance from $r$ with $\Pr(D = d) = \sum_{i:|i-r|=d}\bar{\cI}(i;r)$, so that $D$ has cumulative distribution function $F(d) = \cI_{\le d}(r)/\cI_{\mathrm{tot}}(r)$ and quantile function $Q(\beta) = \min\{d : F(d) \ge \beta\}$. By definition, $\ECL_\beta(r) = Q(\beta)$. The discrete quantile identity
+\[
+\int_0^1 Q(\beta)\,d\beta \;=\; \sum_{d \ge 0} d \cdot \Pr(D = d) \;=\; \E[D]
+\]
+holds because, for the step quantile function of a discrete distribution, $\int_0^1 Q(\beta)\,d\beta$ telescopes to $\sum_d d \cdot (F(d) - F(d-1)) = \sum_d d \cdot \Pr(D=d)$. Substituting the explicit form of $\Pr(D = d)$ yields $\E[D] = \sum_{i=1}^L |i-r| \bar{\cI}(i;r)$.
 \end{proof}
 
 \subsection{Directional ECL}
 
-Genomic regulation is directionally asymmetric: promoters lie upstream, 3\textquotesingle UTR effects downstream. Define upstream and downstream influence:
+Genomic regulation is directionally asymmetric: promoters lie upstream, $3'$-UTR effects downstream. We adopt the convention that ``upstream'' refers to indices $i < r$ (smaller coordinate, by convention closer to the $5'$ end on the plus strand) and ``downstream'' to indices $i > r$, with the understanding that strand orientation must be tracked when comparing across loci. Define upstream and downstream influence:
 \begin{align}
 \cI^-(d;r) &:= \cI(r-d;r), \qquad d>0, \label{eq:upstream}\\
 \cI^+(d;r) &:= \cI(r+d;r), \qquad d>0, \label{eq:downstream}
@@ -91,7 +95,7 @@ The \emph{effective context dimension} is the exponential of the entropy of the 
 \end{equation}
 \end{definition}
 
-ECD measures the effective number of positions contributing to the embedding, analogous to the participation ratio in physics. A model concentrating influence on $k$ positions has $\ECD \approx k$; one spreading influence uniformly over $m$ positions has $\ECD = m$. ECD is invariant to the total scale of $\cI$ and is bounded: $1 \leq \ECD(r) \leq L$.
+ECD measures the effective number of positions contributing to the embedding, analogous to the participation ratio in physics. A model concentrating influence on $k$ positions has $\ECD \approx k$; one spreading influence uniformly over $m$ positions has $\ECD = m$. ECD is invariant to the total scale of $\cI$ and is bounded: $1 \leq \ECD(r) \leq \abs{\mathrm{supp}(\bar{\cI}(\cdot;r))} \leq L$, with the lower bound attained when influence concentrates on a single position. The fully degenerate case $\cI_{\mathrm{tot}}(r) = 0$ (e.g., when $f$ is constant on the relevant context window) leaves $\bar{\cI}$ undefined; in that case ECD is conventionally set to zero and a flag is reported alongside the estimate.
 
 \subsection{Interaction ECL}
 
@@ -99,7 +103,19 @@ Single-site perturbations miss cooperative effects between distant positions. De
 \begin{equation}\label{eq:interaction}
 \cI_{\mathrm{int}}(i,j;r) := \cI(\{i,j\};r) - \cI(i;r) - \cI(j;r),
 \end{equation}
-where $\cI(\{i,j\};r) := \E[d_\cZ(f(X), f(X^{(\{i,j\})}))]$ is the joint perturbation influence. Positive $\cI_{\mathrm{int}}$ indicates synergistic (super-additive) effects; negative indicates redundancy. The interaction ECL is the minimal radius capturing $\beta$-fraction of total interaction energy, revealing cooperativity between proximal and distal elements.
+where $\cI(\{i,j\};r) := \E[d_\cZ(f(X), f(X^{(\{i,j\})}))]$ is the joint perturbation influence. Positive $\cI_{\mathrm{int}}$ indicates synergistic (super-additive) effects; negative indicates redundancy. We define the corresponding ECL.
+
+\begin{definition}[Interaction ECL]\label{def:ecl_int}
+Fix $\beta\in(0,1]$. The \emph{interaction ECL} at level $\beta$ is the minimal radius capturing $\beta$-fraction of total absolute interaction energy:
+\begin{equation}\label{eq:ecl_int_def}
+\ECLint_\beta(r) \;:=\; \min\!\left\{\ell\in\{0,\dots,L\} \;:\;
+\sum_{\substack{i,j\,:\,\min(|i-r|,|j-r|)\le \ell}} \abs{\cI_{\mathrm{int}}(i,j;r)}
+\;\ge\; \beta \sum_{i,j} \abs{\cI_{\mathrm{int}}(i,j;r)}\right\}.
+\end{equation}
+\end{definition}
+
+\noindent
+The absolute value is used in the numerator and denominator so that synergistic and redundant interactions both contribute to the radius, revealing cooperativity between proximal and distal elements regardless of sign.
 
 \subsection{Context Decay Spectroscopy (CDS)}
 
@@ -133,4 +149,4 @@ We propose a genomic analogue of the NLP Needle-in-a-Haystack test. Insert a kno
 \begin{equation}\label{eq:gniah}
 \gNIAH(d, m) := \E\!\left[d_\cZ\!\big(f(X_{\mathrm{neutral}}),\, f(X_{\mathrm{neutral}}^{+m@d})\big)\right],
 \end{equation}
-where $X_{\mathrm{neutral}}^{+m@d}$ denotes the neutral sequence with motif $m$ inserted at distance $d$. The gNIAH profile $d \mapsto \gNIAH(d,m)$ directly measures how far the model can ``see'' a specific regulatory signal, without requiring perturbation of natural sequences.
+where $X_{\mathrm{neutral}}^{+m@d}$ denotes the neutral sequence with motif $m$ inserted at distance $d$ from the prediction center $r$, and the discrepancy is evaluated at $r$. Equivalently, $\gNIAH(d,m)$ is a task-aware influence energy under an ``insertion'' perturbation kernel that overwrites a contiguous block at distance $d$ from $r$ with the motif $m$, in contrast to the ``replacement'' kernels of \cref{def:perturbation}. The gNIAH profile $d \mapsto \gNIAH(d,m)$ directly measures how far the model can ``see'' a specific regulatory signal, without requiring perturbation of natural sequences.

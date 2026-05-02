@@ -54,13 +54,15 @@ Normalize: $\widehat{\cI}(d;r)\leftarrow \widehat{\cI}(d;r)/(n\,m(d))$ for each 
 
 \subsection{Bootstrap confidence intervals}
 
+We use the standard percentile bootstrap~\citep{EfronTibshirani1993Bootstrap}, applied at the level of sequences (the outer Monte Carlo unit), to produce confidence intervals for $\widehat{\ECL}_\beta(r)$.
+
 \begin{algorithm}[H]
 \caption{Bootstrap confidence intervals for $\ECL_\beta(r)$}\label{alg:bootstrap}
 \Input{MC samples $\{(X^{(t)}, \widetilde{X}^{(t,i)})\}$ from \cref{alg:mc_ecl} or \ref{alg:binned}; bootstrap replicates $B$; target $\beta$; confidence level $1-\alpha$.}
 \Output{Percentile CI $[q_{\alpha/2},\, q_{1-\alpha/2}]$ for $\ECL_\beta(r)$.}
 \BlankLine
 \For{$b\leftarrow 1$ \KwTo $B$}{
-  Resample indices $t$ with replacement from $\{1,\dots,n\}$\;
+  Resample sequence indices $t$ with replacement from $\{1,\dots,n\}$, keeping the inner perturbation samples for each resampled $t$ as a unit (block bootstrap over sequences)\;
   Recompute $\widehat{\ECL}^{(b)}_\beta(r)$ from the resampled dataset\;
 }
 Compute empirical quantiles $q_{\alpha/2}$ and $q_{1-\alpha/2}$ of $\{\widehat{\ECL}^{(b)}_\beta(r)\}_{b=1}^B$\;
@@ -80,6 +82,9 @@ Compute empirical quantiles $q_{\alpha/2}$ and $q_{1-\alpha/2}$ of $\{\widehat{\
   Compute cumulative influence and $\widehat{\ECL}_\beta^{(b)}(r)$ from block influences\;
 }
 \end{algorithm}
+
+\paragraph{Block-distance convention.}
+The minimum-index convention $d(B_k) := \min_{i\in B_k}|i-r|$ is conservative: it associates each block with its nearest position to $r$, yielding the smallest plausible ECL upper bound. Alternative conventions (block midpoint, block maximum) shift estimates by at most $b$ bp and become asymptotically equivalent for $b \ll \ECL_\beta(r)$. We recommend the minimum convention by default and reporting the convention used.
 
 \subsection{Comparative ECL test}
 
@@ -108,7 +113,7 @@ $p\text{-value} \leftarrow \frac{1}{P}\sum_{p=1}^P \ind[|T^{(p)}| \ge |T_{\mathr
 \BlankLine
 Collect coarse influence estimates $\{\widehat{\cI}(i_m;r)\}_{m=1}^M$ via ISM at sampled positions\;
 Fit surrogate $\hat{h}(d) \approx \cI(d;r)$ to the binned data (e.g., exponential mixture via NLS)\;
-Compute $\cI_{\le \ell}^{\mathrm{surr}}(r) = \sum_{d=0}^\ell 2\,\hat{h}(d)$ analytically\;
+Compute $\cI_{\le \ell}^{\mathrm{surr}}(r) = \sum_{d=0}^\ell n_d\,\hat{h}(d)$ analytically, where $n_d := |\{i:|i-r|=d\}|$ is the position multiplicity at distance $d$ ($n_0 = 1$ at the interior reference, $n_d \le 2$ for $d \ge 1$, with boundary corrections near sequence edges)\;
 $\widehat{\ECL}_\beta^{\mathrm{surr}}(r) \leftarrow \min\{\ell : \cI_{\le \ell}^{\mathrm{surr}}(r) \ge \beta \cdot \cI_{\mathrm{tot}}^{\mathrm{surr}}(r)\}$\;
 Report surrogate approximation error via cross-validation on held-out positions\;
 \end{algorithm}

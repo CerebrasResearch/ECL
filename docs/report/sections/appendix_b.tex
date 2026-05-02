@@ -5,17 +5,25 @@
 \subsection{Proof of \texorpdfstring{\cref{thm:sobol_equiv}}{Theorem: Sobol Equivalence}}
 
 \begin{proof}
-Under the additive model $f(X) = \sum_{i=1}^L g_i(X_i)$ with independent coordinates and independent-copy perturbation at position $i$:
+\textbf{Part (a): vector identity.} Under the additive vector model $f(X) = \sum_{i=1}^L g_i(X_i)$ with independent coordinates and independent-copy perturbation at position $i$:
 \[
 f(X) - f(X^{(i)}) = g_i(X_i) - g_i(X_i'),
 \]
 where $X_i' \sim P_i$ is independent of $X_i$. Therefore:
 \[
-\cI(i;r) = \E\!\left[\norm{g_i(X_i) - g_i(X_i')}_2^2\right] = 2\Var(g_i(X_i)),
+\cI(i;r) = \E\!\left[\norm{g_i(X_i) - g_i(X_i')}_2^2\right] = 2\,\mathrm{tr}(\Cov(g_i(X_i))),
 \]
-using the identity $\E[(Y-Y')^2] = 2\Var(Y)$ for i.i.d.\ copies $Y, Y'$.
+using the identity $\E[\norm{Y-Y'}_2^2] = 2\,\mathrm{tr}(\Cov(Y))$ for i.i.d.\ vector copies $Y, Y'$. Defining $V_{\mathrm{tot}}^{\mathrm{vec}} := \mathrm{tr}(\Cov(f(X))) = \sum_i \mathrm{tr}(\Cov(g_i(X_i)))$ (using independence), the vector total-effect index $S_i^{T,\mathrm{vec}} := \mathrm{tr}(\Cov(g_i(X_i)))/V_{\mathrm{tot}}^{\mathrm{vec}}$ satisfies $\cI(i;r) = 2\,V_{\mathrm{tot}}^{\mathrm{vec}}\, S_i^{T,\mathrm{vec}}$.
 
-For a scalar projection $\varphi(f(X)) = \sum_i \varphi(g_i(X_i))$, the total variance decomposes as $V_{\mathrm{tot}} = \sum_i \Var(\varphi(g_i(X_i)))$ by independence. The Sobol total-effect index for coordinate $i$ in an additive model with independent inputs equals the first-order index: $S_i^T = S_i = \Var(\varphi(g_i(X_i)))/V_{\mathrm{tot}}$. Therefore $\cI(i;r) = 2V_{\mathrm{tot}} S_i^T$.
+\textbf{Part (b): scalar projection.} Fix any scalar projection $\varphi:\cZ \to \bbR$ and define $Y := \varphi(f(X))$, $V_{\mathrm{tot}} := \Var(Y)$, and the projected single-site influence
+\[
+\cI^\varphi(i;r) := \E[(Y - \varphi(f(X^{(i)})))^2].
+\]
+By the same calculation applied to the scalar variable $\varphi(g_i(X_i))$:
+\[
+\cI^\varphi(i;r) = \E\!\left[(\varphi(g_i(X_i)) - \varphi(g_i(X_i')))^2\right] = 2\,\Var(\varphi(g_i(X_i))).
+\]
+For an additive model with independent coordinates, the total variance of $Y$ decomposes as $V_{\mathrm{tot}} = \sum_i \Var(\varphi(g_i(X_i)))$, and the Sobol total-effect index for coordinate $i$ equals the first-order index $S_i^T = \Var(\varphi(g_i(X_i)))/V_{\mathrm{tot}}$. Therefore $\cI^\varphi(i;r) = 2\,V_{\mathrm{tot}}\, S_i^T$.
 \end{proof}
 
 \subsection{Quantitative tail approximation (\texorpdfstring{\cref{prop:tail_add}}{Proposition: Tail Approximation})}
@@ -36,7 +44,9 @@ Under independence and the additive structure:
 \]
 By Cauchy--Schwarz: $|2\E\ip{A_S}{B_S}| \le 2\sqrt{\E\norm{A_S}^2}\sqrt{\E\norm{B_S}^2}$.
 
-Since $\E\norm{B_S}^2 \le 4\eta^2$ (where $\eta^2 = \E[\norm{\epsilon(X)}^2]$, using triangle inequality and i.i.d.\ structure):
+To bound $\E\norm{B_S}^2$ in terms of $\eta^2$, write $B_S = \epsilon(X) - \epsilon(X^{(S)})$ and apply the parallelogram bound: $\norm{a-b}^2 \le 2(\norm{a}^2 + \norm{b}^2)$, giving $\E\norm{B_S}^2 \le 2(\E\norm{\epsilon(X)}^2 + \E\norm{\epsilon(X^{(S)})}^2)$. Since $X^{(S)} \stackrel{d}{=} X$ under the perturbation kernel preserving the marginal of $\epsilon$ (or otherwise bounded by the same hypothesis), $\E\norm{\epsilon(X^{(S)})}^2 \le \eta^2$, yielding $\E\norm{B_S}^2 \le 4\eta^2$.
+
+Combining,
 \[
 \left|\Delta_{\mathrm{out}}(\ell;r) - \sum_{i\in S}\cI(i;r)\right| \le 2\sqrt{\sum_{i\in S}\cI(i;r)} \cdot 2\eta + 4\eta^2.
 \]
@@ -60,4 +70,10 @@ where the second term captures the interaction contribution. This shows that sin
 
 \subsection{Whitening invariance}
 
-Let $\Sigma=\Cov(f(X))$ be positive definite and define whitened embeddings $\tilde f(X)=\Sigma^{-1/2}(f(X)-\E[f(X)])$. For any invertible linear transform $T$, the model $Tf$ has covariance $T\Sigma T^\top$. Whitening $(T\Sigma T^\top)^{-1/2}(Tf(X) - T\E[f(X)]) = (T\Sigma T^\top)^{-1/2}T\Sigma^{1/2}\tilde{f}(X)$. Since $(T\Sigma T^\top)^{-1/2}T\Sigma^{1/2}$ is orthogonal (verifiable by checking that its square is the identity up to sign), ECL under Mahalanobis distance is invariant under invertible linear reparameterization.
+Let $\Sigma=\Cov(f(X))$ be positive definite and define whitened embeddings $\tilde f(X)=\Sigma^{-1/2}(f(X)-\E[f(X)])$. For any invertible linear transform $T$, the model $Tf$ has covariance $T\Sigma T^\top$. Whitening yields $(T\Sigma T^\top)^{-1/2}(Tf(X) - T\E[f(X)]) = (T\Sigma T^\top)^{-1/2}T\Sigma^{1/2}\tilde{f}(X) = Q\tilde f(X)$, where $Q := (T\Sigma T^\top)^{-1/2}T\Sigma^{1/2}$. To verify orthogonality, compute
+\[
+QQ^\top \;=\; (T\Sigma T^\top)^{-1/2}\,T\Sigma^{1/2}\,\Sigma^{1/2}T^\top\,(T\Sigma T^\top)^{-1/2}
+\;=\; (T\Sigma T^\top)^{-1/2}\,T\Sigma T^\top\,(T\Sigma T^\top)^{-1/2}
+\;=\; I.
+\]
+Hence $Q$ is orthogonal, and ECL under Mahalanobis distance is invariant under invertible linear reparameterization.

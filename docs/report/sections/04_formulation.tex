@@ -30,23 +30,19 @@ For each set $S$, $\Pi_S(\cdot\mid x)$ modifies only coordinates in $S$: $X^{(S)
 \end{assumption}
 
 \begin{assumption}[Conditional local independence]\label{ass:condind}
-When needed for Sobol-type decompositions, we assume that conditioned on a local context window of size $k$ (e.g., $k=2$ for dinucleotide context), coordinates are approximately independent:
+When needed for Sobol-type decompositions (specifically, \cref{thm:sobol_equiv}), we assume that conditioned on a local context window of size $k$ (e.g., $k=2$ for dinucleotide context), coordinates are approximately independent:
 \[
 P(X_i \mid X_{-i}) \approx P(X_i \mid X_{i-k:i+k}).
 \]
 This is biologically more realistic than full coordinate independence and is satisfied by $k$-th order Markov models for DNA.
 \end{assumption}
 
-\begin{assumption}[Sub-Gaussian influence variables]\label{ass:subgauss}
-For each position $i$, the random variable $U_i := d_\cZ(f(X), f(X^{(i)}))$ is sub-Gaussian with parameter $\sigma_U^2$:
-\[
-\E\big[e^{\lambda(U_i - \E[U_i])}\big] \;\le\; \exp\!\Big(\frac{\lambda^2 \sigma_U^2}{2}\Big), \qquad \forall\, \lambda \in \bbR.
-\]
-This is weaker than boundedness and holds when $f$ is Lipschitz and inputs are bounded.
+\begin{assumption}[Bounded influence variables]\label{ass:subgauss}
+For each position $i$, the random variable $U_i := d_\cZ(f(X), f(X^{(i)}))$ satisfies $0 \le U_i \le M$ almost surely for some constant $M < \infty$, with finite variance $\Var(U_i) = \sigma_i^2 < \infty$. Boundedness holds whenever the embedding map $f$ is Lipschitz (\cref{ass:lipschitz}) and inputs are drawn from a finite alphabet, which is the standard setting in genomics.
 \end{assumption}
 
-\begin{assumption}[Lipschitz stability (optional)]\label{ass:lipschitz}
+\begin{assumption}[Lipschitz stability]\label{ass:lipschitz}
 There exists $K>0$ such that for all $x,x'\in\cX$,
 $\norm{f(x)-f(x')}_\cZ \le K \cdot \Ham(x,x')$,
-where $\Ham$ is Hamming distance.
+where $\Ham$ is Hamming distance. Under this assumption with bounded inputs, $U_i = d_\cZ(f(X),f(X^{(i)})) \le K^2$ almost surely under squared Euclidean discrepancy, supplying the boundedness constant $M$ used in \cref{ass:subgauss}.
 \end{assumption}

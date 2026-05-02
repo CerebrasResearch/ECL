@@ -62,7 +62,7 @@ BPE tokenization with ALiBi positional encoding. Input: tokenized DNA (variable 
 \paragraph{Step 2: Perturbation generation.}
 \begin{enumerate}[leftmargin=2em, label=(2.\arabic*)]
 \item For each sequence and each distance bin $d \in \{0, 1, 2, 5, 10, 20, 50, 100, 200, 500\}$ kb:
-\item Sample $m(d) = 10$ positions at distance $d$ from the reference.
+\item Sample $m(d) = 10$ positions at distance $d$ from the reference, increasing $m(d)$ near the threshold-crossing distance per \cref{alg:adaptive} (adaptive sampling) when a coarse pilot already locates the threshold.
 \item Generate perturbed sequences under each perturbation type.
 \item Cache perturbed sequences to avoid regeneration during bootstrap.
 \end{enumerate}

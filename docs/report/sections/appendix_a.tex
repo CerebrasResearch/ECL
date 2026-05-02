@@ -46,25 +46,25 @@ g(x) &= (x_2,\; x_1 \oplus x_3),
 \end{align*}
 where $\oplus$ denotes XOR. Under uniform $P_X$ and single-coordinate substitution perturbation:
 
-For $f$: $\cI(1;2) = \cI(3;2) = 1$, $\cI(2;2) = 1$, so $\ECL_{0.5}(f) = 0$, $\ECL_{1.0}(f) = 1$.
+For $f$: $\cI(1;2) = \cI(3;2) = 1$, $\cI(2;2) = 1$, so $\ECL_{0.5}(f,2) = 0$, $\ECL_{1.0}(f,2) = 1$.
 
-For $g$: $\cI(1;2) = \cI(3;2) = 1$, $\cI(2;2) = 1$, so ECL profiles are identical.
+For $g$: $\cI(1;2) = \cI(3;2) = 1$, $\cI(2;2) = 1$, so the ECL profiles are identical.
 
-However, $f$ encodes $(x_1+x_3)$ while $g$ encodes $(x_1 \oplus x_3)$; neither is a function of the other, so neither Blackwell-dominates. More generally, for models with the same influence profile but different functional forms, ECL equality (or ordering) does not constrain the information-theoretic relationship.
+Yet neither model Blackwell-dominates the other. Take the target $Y := x_1 + x_3 \pmod 4$. Then $Y$ has four distinct values and is recoverable from $f(X)$ (the first coordinate of $f$ is exactly $x_1 + x_3 \in \{0,1,2\}$), but only the parity of $Y$ is recoverable from $g(X)$ (the second coordinate of $g$ is $x_1 \oplus x_3$, which collapses $\{(0,1),(1,0)\}$ together). Hence there is no Markov kernel $K$ with $g(X) \stackrel{d}{=} K(f(X))$ that simultaneously preserves $P(Y \mid g(X))$, ruling out Blackwell domination of $g$ by $f$. Symmetrically, take $Y' := x_1 \oplus x_3$; then $Y'$ is recoverable from $g(X)$ but $f(X)$ retains only the joint sum $x_1 + x_3$, whose parity is $Y'$ but whose value carries strictly more information than $Y'$ alone, so $f(X)$ also fails to be a deterministic function of $g(X)$, ruling out Blackwell domination of $f$ by $g$. ECL profiles are therefore equal while neither model dominates the other in the Blackwell sense.
 \end{proof}
 
-\subsection{Proof of \texorpdfstring{\cref{thm:minimax}}{Theorem: Minimax Rate}}
+\subsection{Proof of \texorpdfstring{\cref{thm:minimax}}{Theorem: Sample-Complexity Lower Bound}}
 
 \begin{proof}
-\textbf{Lower bound.} Consider two models in $\cF_M$: $f_0$ with constant influence $\cI(i;r) = c$ for all $i$, and $f_1$ with $\cI(i;r) = c + \epsilon$ for $|i-r| \le \ell_0$ and $\cI(i;r) = c - \epsilon'$ otherwise, where $\epsilon, \epsilon'$ are chosen so that $\ECL_\beta(f_0) = \ell_0$ and $\ECL_\beta(f_1) = \ell_0 + 1$ with margin $\gamma = \Theta(\epsilon)$. The KL divergence between the observation distributions is $O(n\epsilon^2/\sigma^2)$, and by Le Cam's method, any estimator has risk $\Omega(1)$ unless $n = \Omega(\sigma^2/\epsilon^2) = \Omega(M^2/\gamma^2)$. This gives the stated $\Omega(M^2/(\gamma^2 n))$ lower bound.
+\textbf{Lower bound.} Consider two models in $\cF_M$: $f_0$ with constant influence $\cI(i;r) = c$ for all $i$, and $f_1$ with $\cI(i;r) = c + \epsilon$ for $|i-r| \le \ell_0$ and $\cI(i;r) = c - \epsilon'$ otherwise, where $\epsilon, \epsilon'$ are chosen so that $\ECL_\beta(f_0) = \ell_0$ and $\ECL_\beta(f_1) = \ell_0 + 1$ with margin $\gamma = \Theta(\epsilon)$. Each pair of models induces a pair of observation distributions over the $n$ i.i.d.\ sequence-perturbation samples whose KL divergence is $O(n\epsilon^2/M^2)$ since the influence variables are bounded in $[0,M]$. By Le Cam's two-point method, any estimator $\hat{\ell}$ achieving worst-case error probability at most $1/3$ for both $f_0, f_1$ requires $\mathrm{KL}(P_0^{\otimes n} \| P_1^{\otimes n}) \ge c'$ for some absolute constant $c'$, which forces $n = \Omega(M^2/\gamma^2)$. This yields the stated sample-complexity lower bound.
 
-\textbf{Upper bound.} By \cref{thm:ecl_stability}, $\widehat{\ECL}_\beta = \ECL_\beta$ when $\max_i |\widehat{\cI}(i;r) - \cI(i;r)| \le \gamma/(4L)$. By Hoeffding's inequality and a union bound, this holds with probability $\ge 1-\delta$ when $n \ge O(L^2 M^2 \gamma^{-2} \log(L/\delta))$, giving MSE $O(M^2/(\gamma^2 n))$ up to logarithmic factors.
+\textbf{Matching upper bound.} By \cref{thm:ecl_stability}, $\widehat{\ECL}_\beta = \ECL_\beta$ when $\max_i |\widehat{\cI}(i;r) - \cI(i;r)| \le \gamma/(4L)$. Applying \cref{thm:bernstein} (Bernstein's inequality for bounded variables) and a union bound over the $L$ positions, this holds with probability $\ge 1-\delta$ when $n \ge C\,L^2 M^2 \gamma^{-2}\,\log(L/\delta)$ for an absolute constant $C$, matching the lower bound up to logarithmic factors in $L$ and $1/\delta$.
 \end{proof}
 
 \subsection{Proof of \texorpdfstring{\cref{prop:composition}}{Proposition: Compositional Bound}}
 
 \begin{proof}
-Let $h:\cX \to \cH$ and $g:\cH \to \cZ$ with $f = g \circ h$. The output $f(x)_r = g(h(x))_r$ depends on intermediate positions $\{j : |j - r| \le R_g\}$ in $\cH$. Each intermediate position $j$ depends on input positions $\{i : |i - j| \le R_h\}$ in $\cX$. By triangle inequality, input position $i$ can influence output position $r$ only if there exists intermediate $j$ with $|j-r| \le R_g$ and $|i-j| \le R_h$, implying $|i-r| \le R_g + R_h$. For stacked architectures where each layer has receptive field $R$ and there are $D$ layers with stride $s$, the effective receptive field compounds multiplicatively: $R^\star \le R^D \cdot s^{D-1}$.
+Let $h:\cX \to \cH$ and $g:\cH \to \cZ$ with $f = g \circ h$. The output $f(x)_r = g(h(x))_r$ depends on intermediate positions $\{j : |j - r| \le R_g\}$ in $\cH$. Each intermediate position $j$ depends on input positions $\{i : |i - j| \le R_h\}$ in $\cX$. By the triangle inequality, input position $i$ can influence output position $r$ only if there exists intermediate $j$ with $|j-r| \le R_g$ and $|i-j| \le R_h$, implying $|i-r| \le R_h + R_g$. Hence $\cI(i;r) = 0$ whenever $|i-r| > R_h + R_g$, and \cref{prop:ecl_local} gives $\ECL_\beta(r) \le R_h + R_g$.
 
-For the dilated convolution case with kernel size $k$ and dilations $d_1, \dots, d_D$, the receptive field is additive: $R^\star = 1 + \sum_{l=1}^D (k-1) d_l$.
+For a stack of $D$ layers with kernel sizes $k_l$ and strides $s_l$ (all stride one for the dilation case), the per-layer receptive fields compose additively after taking strides into account: $R^* = 1 + \sum_{l=1}^D (k_l - 1) \prod_{m<l} s_m$. For dilated convolutions with constant kernel size $k$ and dilation rates $d_1, \dots, d_D$ (all strides equal to one), this reduces to $R^* = 1 + \sum_{l=1}^D (k-1) d_l$.
 \end{proof}

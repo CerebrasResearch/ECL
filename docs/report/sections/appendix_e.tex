@@ -12,7 +12,7 @@ The convergence rate of $\widehat{\cI}(i;r)$ is $O(1/\sqrt{n})$ (\cref{thm:clt})
 \item Plot $\widehat{\ECL}_{0.9}$ vs.\ $n$ with bootstrap CIs.
 \item Report the $n$ at which the CI width stabilizes below a target (e.g., $\pm$2~kb).
 \end{enumerate}
-Expected: ECL stabilizes rapidly for models with concentrated influence (small ECD) and more slowly for models with diffuse influence.
+Expected: ECL stabilizes rapidly for models with concentrated influence (small ECD) and more slowly for models with diffuse influence. The convergence assumption is falsified if $\Var(\widehat{\ECL}_{0.9} \mid n)$ does not decrease as $O(1/n)$ past $n \approx 100$, which would indicate either a non-CLT regime (e.g., heavy-tailed influence variables) or an estimator-specific bias not captured by the asymptotic theory.
 
 \subsection{Block size $b$}
 
@@ -34,7 +34,7 @@ For multi-layer models, ECL can be computed at different layers $l$:
 \begin{enumerate}[leftmargin=2em, label=(\roman*)]
 \item Compute ECL at layers $l \in \{1, L/4, L/2, 3L/4, L\}$.
 \item Expected: ECL grows with depth as deeper layers integrate more context.
-\item Report the layer at which ECL saturates---this identifies the depth at which context integration is complete.
+\item Report the layer at which ECL saturates; this identifies the depth at which context integration is complete.
 \end{enumerate}
 
 \subsection{Choice of distance metric}
@@ -43,25 +43,8 @@ Compare ECL under: (i) squared Euclidean $\norm{\cdot}_2^2$, (ii) cosine distanc
 
 Expected: cosine distance yields shorter ECL than Euclidean (it ignores magnitude changes, which may extend further than directional changes). Mahalanobis distance should be intermediate, providing rotation-invariant measurement.
 
-\subsection{Sensitivity summary protocol}
+\subsection{Sensitivity summary}
 
-We recommend reporting a sensitivity summary table for each model:
+\Cref{tab:hyperparameter_sensitivity} reports the results of this ablation study on a representative surrogate model (Enformer calibration, promoter locus). ECL$_{0.9}$ is stable across MC sample counts ($n \ge 25$), bootstrap replicates ($B \ge 500$), and embedding metric choice. Block size is the most influential parameter: coarsening from $b=1$ to $b=128$~bp reduces ECL$_{0.9}$ by $\sim$14\%, consistent with the smoothing effect discussed in \cref{alg:multiscale}.
 
-\begin{table}[H]
-\centering
-\caption{Proposed format: hyperparameter sensitivity summary.}
-\label{tab:sensitivity}
-\small
-\begin{tabular}{@{}l l l@{}}
-\toprule
-\textbf{Hyperparameter} & \textbf{Range tested} & \textbf{$\widehat{\ECL}_{0.9}$ range (bp)} \\
-\midrule
-$n$ (MC samples) & 10--500 & --- \\
-$b$ (block size) & 1--512 bp & --- \\
-$B$ (bootstrap) & 100--5000 & --- \\
-Layer $l$ & 1--$L$ & --- \\
-Metric $d_\cZ$ & Eucl./Cos./Mahal. & --- \\
-Perturbation type & Sub/Shuf/Markov/Gen & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/tabA1_hyperparameter_sensitivity.tex}

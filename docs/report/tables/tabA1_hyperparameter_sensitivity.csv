@@ -1,16 +1,16 @@
 Hyperparameter,Value,ECL_0.9 (bp),CI width (bp)
-MC samples (n),10,169,1
-MC samples (n),25,170,1
-MC samples (n),50,170,1
-MC samples (n),100,170,1
-MC samples (n),200,170,1
-Block size (b),1 bp,172,---
-Block size (b),8 bp,165,---
-Block size (b),32 bp,172,---
-Block size (b),128 bp,140,---
-Bootstrap (B),100,169,1
-Bootstrap (B),500,169,1
-Bootstrap (B),1000,169,1
-Bootstrap (B),5000,169,1
-Metric,Squared Euclidean,169,---
-Metric,Cosine,170,---
+MC samples (n),10,440,1
+MC samples (n),25,439,2
+MC samples (n),50,440,1
+MC samples (n),100,439,1
+MC samples (n),200,439,1
+Block size (b),1 bp,440,n/a
+Block size (b),8 bp,404,n/a
+Block size (b),32 bp,385,n/a
+Block size (b),128 bp,378,n/a
+Bootstrap (B),100,439,1
+Bootstrap (B),500,439,1
+Bootstrap (B),1000,439,1
+Bootstrap (B),5000,439,1
+Metric,Squared Euclidean,439,n/a
+Metric,Cosine,440,n/a

@@ -1,29 +1,29 @@
 \begin{table}[t]
 \centering
-\caption{Hyperparameter sensitivity: $\mathrm{ECL}_{0.9}$ and CI width under varying settings.}
+\caption{Hyperparameter sensitivity: $\mathrm{ECL}_{0.9}$ and CI width under varying settings, on a representative locus drawn from the surrogate calibration of \cref{sec:experiments}. Estimates are stable across MC sample size, bootstrap replicates, and embedding metric, and degrade gracefully as block size grows.}
 \label{tab:hyperparameter_sensitivity}
 \begin{tabular}{llrr}
 \toprule
 \textbf{Hyperparameter} & \textbf{Value} & $\mathrm{ECL}_{0.9}$ (bp) & CI width (bp) \\
 \midrule
-MC samples (n) & 10 & 169 & 1 \\
-MC samples (n) & 25 & 170 & 1 \\
-MC samples (n) & 50 & 170 & 1 \\
-MC samples (n) & 100 & 170 & 1 \\
-MC samples (n) & 200 & 170 & 1 \\
+MC samples (n) & 10 & 440 & 1 \\
+MC samples (n) & 25 & 439 & 2 \\
+MC samples (n) & 50 & 440 & 1 \\
+MC samples (n) & 100 & 439 & 1 \\
+MC samples (n) & 200 & 439 & 1 \\
 \midrule
-Block size (b) & 1 bp & 172 & --- \\
-Block size (b) & 8 bp & 165 & --- \\
-Block size (b) & 32 bp & 172 & --- \\
-Block size (b) & 128 bp & 140 & --- \\
+Block size (b) & 1 bp & 440 & n/a \\
+Block size (b) & 8 bp & 404 & n/a \\
+Block size (b) & 32 bp & 385 & n/a \\
+Block size (b) & 128 bp & 378 & n/a \\
 \midrule
-Bootstrap (B) & 100 & 169 & 1 \\
-Bootstrap (B) & 500 & 169 & 1 \\
-Bootstrap (B) & 1000 & 169 & 1 \\
-Bootstrap (B) & 5000 & 169 & 1 \\
+Bootstrap (B) & 100 & 439 & 1 \\
+Bootstrap (B) & 500 & 439 & 1 \\
+Bootstrap (B) & 1000 & 439 & 1 \\
+Bootstrap (B) & 5000 & 439 & 1 \\
 \midrule
-Metric & Squared Euclidean & 169 & --- \\
-Metric & Cosine & 170 & --- \\
+Metric & Squared Euclidean & 439 & n/a \\
+Metric & Cosine & 440 & n/a \\
 \bottomrule
 \end{tabular}
 \end{table}

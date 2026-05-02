@@ -8,16 +8,16 @@ The ratio $\ECL_{0.9}/L_{\mathrm{nominal}}$ is a measure of architectural effici
 
 \subsection{Implications for training}
 
-If $\ECL_{0.9} \ll L_{\mathrm{nominal}}$ at convergence, training with shorter sequences may be equally effective, yielding substantial compute savings (quadratic for transformers, linear for SSMs). Progressive context extension during training---starting with short sequences and gradually increasing---may be an efficient strategy if ECL grows during training (\cref{sec:extensions}). Curriculum learning schedules could be informed by ECL monitoring.
+If $\ECL_{0.9} \ll L_{\mathrm{nominal}}$ at convergence, training with shorter sequences may be equally effective, yielding substantial compute savings (quadratic for transformers, linear for SSMs). Progressive context extension during training, starting with short sequences and gradually increasing, may be an efficient strategy if ECL grows during training (\cref{sec:extensions}). Curriculum learning schedules could be informed by ECL monitoring.
 
 \subsection{Biological interpretation}
 
-Comparing model ECL distributions to the known distribution of regulatory distances provides a principled assessment of whether a model captures biologically relevant long-range dependencies. The biological evidence indicates that $\sim$84\% of enhancer--promoter interactions fall within 100~kb and $\sim$99\% within 1~Mb. A model with ECL $<$ 20~kb captures only $\sim$47\% of the regulatory landscape; achieving ECL $\approx$ 100~kb captures $\sim$84\%. Models should aim for ECL at least matching the median enhancer--promoter distance ($\sim$30~kb) for competent regulatory genomics.
+Comparing model ECL distributions to the known distribution of regulatory distances provides a principled assessment of whether a model captures biologically relevant long-range dependencies. Estimates of enhancer--promoter distance distributions vary across studies and assays (Hi-C, PCHi-C, CRISPR-based perturbation screens); widely cited surveys place the bulk of enhancer--promoter interactions within roughly $100$~kb of the target gene, with a long tail extending to $\sim$$1$~Mb~\citep{Karollus2023Limited}. Under such estimates, a model with ECL well below this typical interaction radius will systematically miss long-range regulatory dependencies; conversely, achieving ECL on the order of the interaction radius should be considered a minimum competency for regulatory genomics. We deliberately do not commit to a single percentile here, since the precise distribution depends on the underlying assay and dataset.
 
 \subsection{Limitations}
 
 \paragraph{Perturbation dependence.}
-ECL is not an intrinsic property of $f$ alone: it depends on $\Pi$ and $P_X$. We recommend reporting ECL under multiple perturbation types and defining a \emph{consensus ECL} as the median across perturbation types.
+ECL is not an intrinsic property of $f$ alone: it depends on $\Pi$ and $P_X$. We recommend reporting ECL under multiple perturbation types and defining a \emph{consensus ECL} as the median across perturbation types. Reports should also document the provenance of $P_X$ (reference genome, sequence cohort, sampling protocol), since switching $P_X$ implicitly redefines the influence energies.
 
 \paragraph{Non-additivity.}
 Single-site influence energies can miss synergistic distal interactions. Block perturbations and interaction ECL (\cref{eq:interaction}) partially address this, but full characterization of high-order interactions is computationally prohibitive for long sequences.
